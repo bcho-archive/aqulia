@@ -1,4 +1,4 @@
-CMAKE = cmake
+CMAKE = `which cmake`
 TARGET_DIR = build
 SOURCE_DIR = $(CURDIR)
 
@@ -13,7 +13,7 @@ prepare:
 	cd $(TARGET_DIR); $(CMAKE) $(CMAKE_VARS) $(CURDIR)
 
 build: prepare
-	cd $(TARGET_DIR); $(MAKE)
+	cd $(TARGET_DIR); $(MAKE); $(MAKE) install
 
 clean:
 	rm -rf $(TARGET_DIR)
