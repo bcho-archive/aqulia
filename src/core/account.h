@@ -17,6 +17,7 @@ typedef enum {
 
 /* card information */
 struct personal_info {
+    int cardno;
     char expire[DATETIME_SIZE];
     double balance;
     card_state_t state;
