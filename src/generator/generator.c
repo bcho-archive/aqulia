@@ -20,7 +20,7 @@ struct generate_limit {
     int sc, fc, mc;                                         /* selection count */
 } limit = {
     14000000, 15000000,
-    20120901, 20160901,
+    2012, 2016,
     0.0, 300.0,
     CARD_USABLE, CARD_FREEZED,
     {
@@ -44,11 +44,31 @@ int main()
     return 0;
 }
 
+inline int isleap(int year)
+{
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
+
+inline void generate_date(int yb, int ye, char *dest)
+{
+    int mdays[2][12] = {
+        {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+        {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+    };
+    int year, month, day;
+
+    year = rand() % (ye - yb) + yb;
+    month = rand() % 12 + 1;
+    day = mdays[isleap(year)][month - 1];
+
+    sprintf(dest, "%d%02d%02d", year, month, day);
+}
+
 void generate_personal(struct generate_limit limit,
                        struct personal_info *person)
 {
     person->cardno = rand() % (limit.ce - limit.cb) + limit.cb;
-    sprintf(person->expire, "%d", rand() % (limit.ee - limit.eb) + limit.eb);
+    generate_date(limit.eb, limit.ee, person->expire);
     person->balance = rand() % ((int) (limit.be - limit.bb)) + limit.bb;
     person->state = CARD_USABLE;
     sprintf(person->faculty, "/%s/%s/%s",
