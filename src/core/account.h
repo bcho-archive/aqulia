@@ -12,7 +12,7 @@ typedef enum {
 
 /* consume type */
 typedef enum {
-    CONSUME_POS;
+    CONSUME_POS
 } consume_type_t;
 
 /* card information */
