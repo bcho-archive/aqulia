@@ -2,6 +2,7 @@
 #define ACCOUNT_H
 
 #define DATETIME_SIZE 8
+#define DAILY_CONSUME_LIMIT 50
 
 /* card state */
 typedef enum {
