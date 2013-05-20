@@ -4,3 +4,4 @@ project (aqulia)
 set (CMAKE_INSTALL_PREFIX "./bin/")
 
 add_subdirectory (src)
+add_subdirectory (tests)
