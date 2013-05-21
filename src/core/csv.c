@@ -62,7 +62,7 @@ struct csv_row *csv_read_row(FILE *stream, struct csv_header *header)
         return NULL;
 
     if (fgets(buf, LINE_MAX, stream) == NULL)
-        ERROR("csv read row");
+        return NULL;
 
     head = NULL;
     trim(buf);

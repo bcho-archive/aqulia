@@ -127,15 +127,15 @@ void generate_pos(struct generate_limit limit, struct pos_info *pos) {
 
 /* generate consume history */
 char *generate_history(int year, int month, int day, double cost,
-                       double balance, struct pos_info pos)
+                       double balance, struct pos_info *pos)
 {
     char *history;
     char buf[150];
 
     sprintf(buf, "%d%02d%02d,%d%02d%02d,%.2lf,%.2lf,%d,%d,%s",
             year, month, day, year, month, day,
-            cost, balance, (int) CONSUME_POS, pos.transcation++, pos.name);
-    history = malloc(sizeof(char) * strlen(buf));
+            cost, balance, (int) CONSUME_POS, pos->transcation++, pos->name);
+    history = malloc(sizeof(char) * (strlen(buf) + 1));
     strcpy(history, buf);
     return history;
 }
@@ -151,6 +151,7 @@ void save_consume(struct generate_limit limit, struct personal_info *person,
 
     sprintf(fname, OUTPUT_PREFIX"%d/"FEE_OUTPUT, person->cardno);
     stream = fopen(fname, "w");
+    fprintf(stream, "consumed,received,sum,balance,consume_type,transcation,pos\n");
 
     month = rand() % 12 + 1;
     day = rand() % mdays[isleap(YEAR)][month - 1] + 1;
@@ -165,9 +166,10 @@ void save_consume(struct generate_limit limit, struct personal_info *person,
             person->balance -= cost;
 
             history = generate_history(YEAR, month, day, cost, person->balance,
-                                       pos[rand() % limit.pc]);
+                                       &pos[rand() % limit.pc]);
 
             fprintf(stream, "%s\n", history);
+            free(history);
             /* printf("%s\n", history); */
 
             if (rand() % 100 > 45)

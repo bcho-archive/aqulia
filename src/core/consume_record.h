@@ -1,7 +1,7 @@
 #ifndef CONSUME_RECORD_H
 #define CONSUME_RECORD_H
 
-#define DATETIME_SIZE 8
+#define DATETIME_SIZE 9
 
 /* consume type */
 typedef enum {
@@ -25,4 +25,7 @@ struct consume_record {
     struct consume_record *next;
 };
 
+struct consume_record *consume_record_read(char *fname);
+void consume_record_save(char *fname, struct consume_record *record);
+void consume_record_destory(struct consume_record *record);
 #endif

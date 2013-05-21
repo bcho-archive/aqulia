@@ -1,7 +1,7 @@
 #ifndef PERSONAL_INFO_H
 #define PERSONAL_INFO_H
 
-#define DATETIME_SIZE 8
+#define DATETIME_SIZE 9
 
 /* card state */
 typedef enum {
