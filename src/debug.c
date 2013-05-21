@@ -11,6 +11,7 @@ void ERROR(const char *fmt, ...)
     va_start(list, fmt);
     vfprintf(stderr, fmt, list);
     va_end(list);
+    fprintf(stderr, "\n");
     abort();
 }
 
@@ -21,4 +22,5 @@ void DEBUG(const char *fmt, ...)
     va_start(list, fmt);
     vfprintf(stderr, fmt, list);
     va_end(list);
+    fprintf(stderr, "\n");
 }
