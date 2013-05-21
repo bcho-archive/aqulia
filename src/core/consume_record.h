@@ -21,6 +21,8 @@ struct consume_record {
     double balance;
     consume_type_t consume_type;
     struct pos_info *pos;
+
+    struct consume_record *next;
 };
 
 #endif

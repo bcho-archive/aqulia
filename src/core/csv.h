@@ -32,8 +32,10 @@ struct csv_row {
     struct csv_row *next;
 };
 
+struct csv_header *csv_read_header_from_string(char *buf);
 struct csv_header *csv_read_header(FILE *stream);
 struct csv_row *csv_read_row(FILE *stream, struct csv_header *header);
+struct csv_row *csv_create_row(struct csv_header *header);
 void csv_write_header(FILE *stream, struct csv_header *header);
 void csv_write_row(FILE *stream, struct csv_row *row);
 struct csv_header *csv_find_header(struct csv_header *header, const char *key);

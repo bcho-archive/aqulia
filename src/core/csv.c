@@ -9,14 +9,10 @@
 #define LINE_MAX 1024
 #define DELIMITER ','
 
-struct csv_header *csv_read_header(FILE *stream)
+struct csv_header *csv_read_header_from_string(char *buf)
 {
     char *str, *value;
-    char buf[LINE_MAX];
     struct csv_header *p, *prev, *head;
-
-    if (fgets(buf, LINE_MAX, stream) == NULL)
-        ERROR("csv read header");
 
     head = NULL;
     trim(buf);
@@ -27,7 +23,7 @@ struct csv_header *csv_read_header(FILE *stream)
             p = malloc(sizeof(struct csv_header));
             if (p == NULL)
                 ERROR("malloc");
-            p->name = malloc(sizeof(char) * strlen(value));
+            p->name = malloc(sizeof(char) * (strlen(value) + 1));
             if (p->name == NULL)
                 ERROR("malloc");
             strcpy(p->name, value);
@@ -43,6 +39,16 @@ struct csv_header *csv_read_header(FILE *stream)
     }
 
     return head;
+}
+
+struct csv_header *csv_read_header(FILE *stream)
+{
+    char buf[LINE_MAX];
+
+    if (fgets(buf, LINE_MAX, stream) == NULL)
+        ERROR("csv read header");
+
+    return csv_read_header_from_string(buf);
 }
 
 struct csv_row *csv_read_row(FILE *stream, struct csv_header *header)
@@ -66,10 +72,10 @@ struct csv_row *csv_read_row(FILE *stream, struct csv_header *header)
         if (value != NULL && strlen(value)) {
             trim(value);
             p = malloc(sizeof(struct csv_row));
-            p->next = NULL;
             if (p == NULL)
                 ERROR("malloc");
-            p->name = malloc(sizeof(char) * strlen(h->name));
+            p->next = NULL;
+            p->name = malloc(sizeof(char) * (strlen(h->name) + 1));
             if (p->name == NULL)
                 ERROR("malloc");
             strcpy(p->name, h->name);
@@ -88,10 +94,11 @@ struct csv_row *csv_read_row(FILE *stream, struct csv_header *header)
                     break;
                 case CSV_STRING:
                 default:
-                    p->svalue = malloc(sizeof(char) * strlen(value));
+                    p->svalue = malloc(sizeof(char) * (strlen(value) + 1));
                     if (p->svalue == NULL)
                         ERROR("malloc");
                     strcpy(p->svalue, value);
+                    p->svalue[strlen(value)] = '\0';
                     break;
             }
 
@@ -101,6 +108,33 @@ struct csv_row *csv_read_row(FILE *stream, struct csv_header *header)
                 prev->next = p;
             prev = p;
         }
+    }
+
+    return head;
+}
+
+/* create an empty row basic on header */
+struct csv_row *csv_create_row(struct csv_header *header)
+{
+    struct csv_row *head, *p, *prev;
+
+    for (head = NULL;header != NULL;header = header->next) {
+        p = malloc(sizeof(struct csv_row));
+        if (p == NULL)
+            ERROR("malloc");
+        p->next = NULL;
+        p->name = malloc(sizeof(char) * strlen(header->name));
+        if (p->name == NULL)
+            ERROR("malloc");
+        strcpy(p->name, header->name);
+        strcpy(p->fmt, header->fmt);
+        p->type = header->type;
+
+        if (head == NULL)
+            head = p;
+        else
+            prev->next = p;
+        prev = p;
     }
 
     return head;

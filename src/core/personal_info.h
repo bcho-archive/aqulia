@@ -19,4 +19,8 @@ struct personal_info {
     char faculty[150];
 };
 
+struct personal_info *personal_read(char *fname);
+void personal_save(char *fname, struct personal_info *info);
+void personal_destory(struct personal_info *info);
+
 #endif
