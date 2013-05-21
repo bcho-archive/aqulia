@@ -125,7 +125,7 @@ void consume_record_save(char *fname, struct consume_record *record)
     header = create_header();
     csv_write_header(stream, header);
 
-    sort((void **) &record, next, set_next, cmp);
+    sort((void **) &record, next, set_next, cmp, 0);
     for (;record != NULL;record = record->next) {
         row = csv_create_row(header);
         assign_row(row, record);

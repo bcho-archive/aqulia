@@ -28,4 +28,9 @@ struct consume_record {
 struct consume_record *consume_record_read(char *fname);
 void consume_record_save(char *fname, struct consume_record *record);
 void consume_record_destory(struct consume_record *record);
+
+/*
+struct consume_record *consume_record_query(struct consume_record *record,
+                                            int (*check)(struct consume_record *a));
+*/
 #endif

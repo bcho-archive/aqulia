@@ -22,13 +22,15 @@ static void *find_mid(void *list, void *(*next)(void *))
 
 static void *merge(void *left, void *right, void *(*next)(void *),
                    void (*set_next)(void *, void *),
-                   int (*cmp)(void *, void *))
+                   int (*cmp)(void *, void *), int reverse)
 {
     void *head, *prev, *p;
+    int r;
 
     head = NULL;
+    r = (reverse) ? -1 : 1;
     while (left != NULL && right != NULL) {
-        if (cmp(left, right) > 0) {
+        if (cmp(left, right) * r > 0) {
             p = left;
             left = next(left);
         } else {
@@ -52,7 +54,7 @@ static void *merge(void *left, void *right, void *(*next)(void *),
 
 inline static void *_sort(void *list, void *(*next)(void *),
                           void (*set_next)(void *, void *),
-                          int (*cmp)(void *, void *))
+                          int (*cmp)(void *, void *), int reverse)
 {
     void *mid, *left, *right;
 
@@ -64,13 +66,13 @@ inline static void *_sort(void *list, void *(*next)(void *),
     right = next(mid);
     set_next(mid, NULL);
 
-    return merge(_sort(left, next, set_next, cmp),
-                 _sort(right, next, set_next, cmp),
-                 next, set_next, cmp);
+    return merge(_sort(left, next, set_next, cmp, reverse),
+                 _sort(right, next, set_next, cmp, reverse),
+                 next, set_next, cmp, reverse);
 }
 
 void sort(void **list, void *(*next)(void *), void (*set_next)(void *, void *),
-          int (*cmp)(void *, void *))
+          int (*cmp)(void *, void *), int reverse)
 {
-    *list = _sort(*list, next, set_next, cmp);
+    *list = _sort(*list, next, set_next, cmp, reverse);
 }

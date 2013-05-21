@@ -43,7 +43,7 @@ int main()
     for (p = record;p != NULL;p = p->next)
         PRT(p);
     */
-    sort((void **) &record, next, set_next, cmp);
+    sort((void **) &record, next, set_next, cmp, 0);
     for (p = record;p != NULL;p = p->next)
         PRT(p);
     consume_record_destory(record);
