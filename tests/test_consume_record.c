@@ -20,7 +20,14 @@ int main()
     record = consume_record_read(data);
     for (p = record;p != NULL;p = p->next)
         PRT(p);
+    printf("---------------\n");
     record->balance = 1000.0;
+    p = record->next;
+    record->next = p->next;
+    p->next = record;
+    record = p;
+    for (p = record;p != NULL;p = p->next)
+        PRT(p);
     consume_record_save(data, record);
     consume_record_destory(record);
     

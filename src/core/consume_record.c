@@ -1,5 +1,6 @@
 #include "consume_record.h"
 #include "csv.h"
+#include "sort.h"
 #include "../debug.h"
 
 #include <stdio.h>
@@ -97,6 +98,21 @@ struct consume_record *consume_record_read(char *fname)
     return head;
 }
 
+static void *next(void *cur) {
+    return ((struct consume_record *) cur)->next;
+}
+
+static void set_next(void *node, void *value)
+{
+    ((struct consume_record *) node)->next = value;    
+}
+
+static int cmp(void *a, void *b)
+{
+    return strcmp(((struct consume_record *) a)->consumed,
+                  ((struct consume_record *) b)->consumed);
+}
+
 void consume_record_save(char *fname, struct consume_record *record)
 {
     struct csv_header *header;
@@ -109,6 +125,7 @@ void consume_record_save(char *fname, struct consume_record *record)
     header = create_header();
     csv_write_header(stream, header);
 
+    sort((void **) &record, next, set_next, cmp);
     for (;record != NULL;record = record->next) {
         row = csv_create_row(header);
         assign_row(row, record);

@@ -9,7 +9,7 @@ add_library (personal_info personal_info.c)
 target_link_libraries (personal_info csv utils _debug)
 
 add_library (consume_record consume_record.c)
-target_link_libraries (consume_record csv utils _debug)
+target_link_libraries (consume_record csv utils _debug sort)
 
 install (FILES account.h personal_info.h consume_record.h
          DESTINATION "include/aqulia")
