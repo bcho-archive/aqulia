@@ -9,11 +9,13 @@
 #define LINE_MAX 1024
 #define DELIMITER ','
 
-struct csv_header *csv_read_header_from_string(char *buf)
+struct csv_header *csv_read_header_from_string(char *s)
 {
-    char *str, *value;
+    char *str, *value, *buf, *dummy;
     struct csv_header *p, *prev, *head;
 
+    buf = strdup(s);
+    dummy = buf;
     head = NULL;
     trim(buf);
     for (str = buf, value = buf;str != NULL;value = str) {
@@ -37,6 +39,7 @@ struct csv_header *csv_read_header_from_string(char *buf)
             prev = p;
         }
     }
+    free(dummy);
 
     return head;
 }
@@ -46,7 +49,7 @@ struct csv_header *csv_read_header(FILE *stream)
     char buf[LINE_MAX];
 
     if (fgets(buf, LINE_MAX, stream) == NULL)
-        ERROR("csv read header");
+        return NULL;
 
     return csv_read_header_from_string(buf);
 }
@@ -64,23 +67,16 @@ struct csv_row *csv_read_row(FILE *stream, struct csv_header *header)
     if (fgets(buf, LINE_MAX, stream) == NULL)
         return NULL;
 
-    head = NULL;
+    head = csv_create_row(header);
     trim(buf);
     h = header;
     for (str = buf, value = buf;str != NULL;value = str, h = h->next) {
         str = split(value, DELIMITER);
-        if (value != NULL && strlen(value)) {
+        if (value != NULL) {
             trim(value);
-            p = malloc(sizeof(struct csv_row));
+            p = csv_find_row(head, h->name);
             if (p == NULL)
-                ERROR("malloc");
-            p->next = NULL;
-            p->name = malloc(sizeof(char) * (strlen(h->name) + 1));
-            if (p->name == NULL)
-                ERROR("malloc");
-            strcpy(p->name, h->name);
-            strcpy(p->fmt, h->fmt);
-            p->type = h->type;
+                ERROR("csv read row: %s", h->name);
 
             switch (h->type) {
                 case CSV_INT:
@@ -94,19 +90,11 @@ struct csv_row *csv_read_row(FILE *stream, struct csv_header *header)
                     break;
                 case CSV_STRING:
                 default:
-                    p->svalue = malloc(sizeof(char) * (strlen(value) + 1));
+                    p->svalue = strdup(value);
                     if (p->svalue == NULL)
                         ERROR("malloc");
-                    strcpy(p->svalue, value);
-                    p->svalue[strlen(value)] = '\0';
                     break;
             }
-
-            if (head == NULL)
-                head = p;
-            else
-                prev->next = p;
-            prev = p;
         }
     }
 
