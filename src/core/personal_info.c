@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define HEAD_STR "cardno,expire,balance,state,faculty"
+
 static inline void prepare_header(struct csv_header *header)
 {
     struct csv_header *p;
@@ -23,7 +25,7 @@ static inline void prepare_header(struct csv_header *header)
 
 static inline struct csv_header *create_header()
 {
-    char buf[] = "cardno,expire,balance,state,faculty";
+    char buf[] = HEAD_STR;
     struct csv_header *header;
 
     header = csv_read_header_from_string(buf);
@@ -63,9 +65,16 @@ struct personal_info *personal_read(char *fname)
         ERROR("malloc");
 
     header = csv_read_header(stream);
+    if (header == NULL)
+        header = csv_read_header_from_string(HEAD_STR);
     prepare_header(header);
 
     row = csv_read_row(stream, header);
+    if (row == NULL) {
+        DEBUG("exit there");
+        return info;
+    }
+
     info->cardno = csv_find_row(row, "cardno")->ivalue;
     strcpy(info->expire, csv_find_row(row, "expire")->svalue);
     info->balance = csv_find_row(row, "balance")->dvalue;

@@ -11,4 +11,7 @@ char *trim(char *str);
  */
 char *split(char *str, char delim);
 
+/* touch file */
+void touch_file(char *fname);
+
 #endif

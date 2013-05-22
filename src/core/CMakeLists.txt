@@ -12,7 +12,7 @@ add_library (consume_record consume_record.c)
 target_link_libraries (consume_record csv utils _debug sort)
 
 add_library (account account.c account_validate.c account_sort.c account_query.c
-                     account_freeze.c)
+                     account_freeze.c account_consume.c)
 target_link_libraries (account personal_info consume_record _debug)
 
 install (FILES account.h personal_info.h consume_record.h

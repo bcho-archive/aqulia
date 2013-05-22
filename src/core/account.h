@@ -14,6 +14,14 @@ typedef enum {
     E_FREEZE
 } E_ACCOUNT_READ_TYPE;
 
+typedef enum {
+    E_CONSUME_OK,
+    E_CONSUME_FREEZED,
+    E_CONSUME_CANTPAY,
+    E_CONSUME_NOTFOUND,
+    E_CONSUME_FAILED
+} E_ACCOUNT_CONSUME_TYPE;
+
 struct account {
     struct personal_info *info;
     struct consume_record *record;
@@ -53,6 +61,12 @@ E_ACCOUNT_READ_TYPE account_freeze(struct account *account);
 E_ACCOUNT_READ_TYPE account_unfreeze(struct account *account);
 
 /* consume */
+E_ACCOUNT_CONSUME_TYPE account_consume(struct account *account,
+                                       const char *consumed, const char *received,
+                                       double sum, consume_type_t consume_type,
+                                       const char *pos);
+E_ACCOUNT_CONSUME_TYPE account_consume_delete(struct account *account,
+                                              struct consume_record *record);
 
 #define DAILY_CONSUME_LIMIT 50
 #endif

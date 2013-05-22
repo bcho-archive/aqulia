@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -37,4 +38,12 @@ char *split(char *str, char delim)
      return p + 1;
     }
     return NULL;
+}
+
+void touch_file(char *fname)
+{
+    FILE *stream;
+
+    stream = fopen(fname, "a");
+    fclose(stream);
 }
