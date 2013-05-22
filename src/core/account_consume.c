@@ -52,7 +52,7 @@ E_ACCOUNT_CONSUME_TYPE account_consume_delete(struct account *account,
     undo = consume_record_read(account->consume_undo);
     record->next = undo;
     undo = record;
-    consume_record_save(account->consume_undo, undo);
+    consume_record_save(account->consume_undo, &undo);
     consume_record_destory(undo);
 
     return E_CONSUME_OK;

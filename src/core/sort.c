@@ -25,12 +25,10 @@ static void *merge(void *left, void *right, void *(*next)(void *),
                    int (*cmp)(void *, void *), int reverse)
 {
     void *head, *prev, *p;
-    int r;
 
     head = NULL;
-    r = (reverse) ? -1 : 1;
     while (left != NULL && right != NULL) {
-        if (cmp(left, right) * r > 0) {
+        if (cmp(left, right) > 0 && !reverse) {
             p = left;
             left = next(left);
         } else {

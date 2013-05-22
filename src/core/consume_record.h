@@ -28,7 +28,7 @@ struct consume_record {
 };
 
 struct consume_record *consume_record_read(char *fname);
-void consume_record_save(char *fname, struct consume_record *record);
+void consume_record_save(char *fname, struct consume_record **rec);
 void consume_record_destory(struct consume_record *record);
 
 struct consume_record *consume_record_create(const char *consumed,

@@ -117,12 +117,23 @@ static void set_next(void *node, void *value)
 
 static int cmp(void *a, void *b)
 {
-    return strcmp(((struct consume_record *) a)->consumed,
-                  ((struct consume_record *) b)->consumed);
+    struct consume_record *c, *d;
+    int ret;
+
+    c = (struct consume_record *) a; d = (struct consume_record *) b;
+    ret = strcmp(c->consumed, d->consumed);
+    return ret;
+    if (ret == 0)
+        if (c->balance > d->balance)
+            ret = 1;
+        else if (c->balance < d->balance)
+            ret = -1;
+    return ret * -1;
 }
 
-void consume_record_save(char *fname, struct consume_record *record)
+void consume_record_save(char *fname, struct consume_record **rec)
 {
+    struct consume_record *record;
     struct csv_header *header;
     struct csv_row *row;
     FILE *stream;
@@ -133,7 +144,9 @@ void consume_record_save(char *fname, struct consume_record *record)
     header = create_header();
     csv_write_header(stream, header);
 
-    sort((void **) &record, next, set_next, cmp, 0);
+    record = *rec;
+    sort((void **) &record, next, set_next, cmp, 1);
+    *rec = record;
     for (;record != NULL;record = record->next) {
         row = csv_create_row(header);
         assign_row(row, record);

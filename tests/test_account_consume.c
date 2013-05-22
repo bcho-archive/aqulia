@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
     if (account_query_by_date(account, "20130621", &b, &e) == E_OK) {
         printf("record: %s\n", b->consumed);
         account_consume_delete(account, b);
-        printf("record: %s\n", b->consumed);
     }
 
     /* consume */
@@ -34,11 +33,9 @@ int main(int argc, char *argv[])
     if (account_consume(account, "20130823", "20130823", account->info->balance - 0.1,
                         CONSUME_POS, "test machine") == E_CONSUME_OK)
         printf("bought\n");
-    DEBUG("%s %.2lf", account->record->next->received, account->record->next->balance);
     if (account_consume(account, "20130826", "20130826", account->info->balance,
                         CONSUME_POS, "test machine") == E_CONSUME_OK)
         printf("bought\n");
-    DEBUG("%s %.2lf", account->record->next->received, account->record->next->balance);
 
     account_destory(account);
 

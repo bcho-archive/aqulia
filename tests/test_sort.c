@@ -26,11 +26,17 @@ void set_next(void *cur, void *value)
 int cmp(void *a, void *b)
 {
     struct consume_record *c, *d;
+    int ret;
 
-    c = (struct consume_record *) a;
-    d = (struct consume_record *) b;
-
-    return strcmp(c->pos->name, d->pos->name);
+    return -1 * strcmp(((struct consume_record *) a)->consumed,
+    ((struct consume_record *) b)->consumed);
+    ret = strcmp(c->consumed, d->consumed);
+    if (ret == 0)
+        if (c->balance > d->balance)
+            ret = 1;
+        else if (c->balance < d->balance)
+            ret = -1;
+    return ret * -1;
 }
 
 int main()
@@ -44,6 +50,10 @@ int main()
         PRT(p);
     */
     sort((void **) &record, next, set_next, cmp, 0);
+    for (p = record;p != NULL;p = p->next)
+        PRT(p);
+    printf("--------\n");
+    sort((void **) &record, next, set_next, cmp, 1);
     for (p = record;p != NULL;p = p->next)
         PRT(p);
     consume_record_destory(record);

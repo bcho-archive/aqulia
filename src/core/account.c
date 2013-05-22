@@ -36,7 +36,7 @@ E_ACCOUNT_READ_TYPE account_read(int cardno, struct account **acc)
 void account_save(struct account *account)
 {
     personal_save(account->personal_file, account->info);
-    consume_record_save(account->consume_record, account->record);
+    consume_record_save(account->consume_record, &account->record);
 }
 
 void account_destory(struct account *account)
