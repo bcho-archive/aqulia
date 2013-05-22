@@ -15,6 +15,9 @@ target_link_libraries (test_sort consume_record utils _debug sort)
 add_executable (test_account test_account.c)
 target_link_libraries (test_account account)
 
+add_executable (test_account_query test_account_query.c)
+target_link_libraries (test_account_query account)
+
 install (TARGETS test_csv test_personal_info test_consume_record test_sort
-                 test_account
+                 test_account test_account_query
          DESTINATION "bin")

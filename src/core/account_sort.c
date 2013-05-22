@@ -28,6 +28,7 @@ E_ACCOUNT_READ_TYPE account_sort_by_date(struct account *account, int reverse)
         return state;
 
     sort((void **) &account->record, next, set_next, cmp_date, reverse);
+    return state;
 }
 
 inline static int cmp_sum(void *a, void *b)
@@ -49,6 +50,7 @@ E_ACCOUNT_READ_TYPE account_sort_by_sum(struct account *account, int reverse)
         return state;
 
     sort((void **) &account->record, next, set_next, cmp_sum, reverse);
+    return state;
 }
 
 inline static int cmp_transcation(void *a, void *b)
@@ -65,4 +67,5 @@ E_ACCOUNT_READ_TYPE account_sort_by_transcation(struct account *account, int rev
         return state;
 
     sort((void **) &account->record, next, set_next, cmp_transcation, reverse);
+    return state;
 }

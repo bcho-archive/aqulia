@@ -32,15 +32,16 @@ void account_destory(struct account *account);
 E_ACCOUNT_READ_TYPE account_validate(struct account *account);
 
 /* query */
-/*
 E_ACCOUNT_READ_TYPE account_query_by_date(struct account *account, char *date,
-                                          struct consume_record **record);
+                                          struct consume_record **begin,
+                                          struct consume_record **end);
 E_ACCOUNT_READ_TYPE account_query_by_date_range(struct account *account,
-                                                char *begin, char *end,
-                                                struct consume_record **record);
+                                                char *lower, char *upper,
+                                                struct consume_record **begin,
+                                                struct consume_record **end);
 E_ACCOUNT_READ_TYPE account_query_by_sum(struct account *account, double sum,
-                                         struct consume_record **record);
-*/
+                                         struct consume_record **begin,
+                                         struct consume_record **end);
 
 /* sort */
 E_ACCOUNT_READ_TYPE account_sort_by_date(struct account *account, int reverse);
