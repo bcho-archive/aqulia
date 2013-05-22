@@ -49,9 +49,8 @@ E_ACCOUNT_READ_TYPE account_sort_by_sum(struct account *account, int reverse);
 E_ACCOUNT_READ_TYPE account_sort_by_transcation(struct account *account, int reverse);
 
 /* freeze */
-/*
-void account_freeze(struct account *account);
-*/
+E_ACCOUNT_READ_TYPE account_freeze(struct account *account);
+E_ACCOUNT_READ_TYPE account_unfreeze(struct account *account);
 
 /* consume */
 
