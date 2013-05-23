@@ -3,8 +3,8 @@
 #include <assert.h>
 
 #include "test.h"
-#include "../src/core/csv.h"
-#include "../src/debug.h"
+#include "../src/utils/csv.h"
+#include "../src/utils/debug.h"
 
 int main()
 {

@@ -1,68 +1,79 @@
 #include "account.h"
-#include "../debug.h"
 
 #include <string.h>
 
-E_ACCOUNT_READ_TYPE account_query_by_date(struct account *account, char *date,
-                                          struct consume_record **begin,
-                                          struct consume_record **end)
+E_ACCOUNT_ACCESS_TYPE
+account_query_by_date(struct account *account, char *date,
+                      struct consume_record **begin_return,
+                      struct consume_record **end_return)
 {
-    E_ACCOUNT_READ_TYPE ret;
+    E_ACCOUNT_ACCESS_TYPE state;
+    struct consume_record *b, *e;
 
-    if ((ret = account_sort_by_date(account, 0)) != E_OK)
-        return ret;
+    if ((state = account_sort_by_date(account, 0)) != E_OK)
+        return state;
 
-    for (*begin = account->record;
-         *begin != NULL && strcmp(date, (*begin)->consumed) != 0;
-         *begin = (*begin)->next)
+    for (b = account->record;
+         b != NULL && strcmp(date, b->consumed) != 0;
+         b = b->next)
         ;
-    for (*end = *begin;
-         *end != NULL && strcmp(date, (*end)->consumed) == 0;
-         *end = (*end)->next);
+    for (e = b;
+         e != NULL && strcmp(date, e->consumed) == 0;
+         e = e->next)
         ;
+    *begin_return = b;
+    *end_return = e;
 
-    return ret;
+    return state;
 }
 
-E_ACCOUNT_READ_TYPE account_query_by_date_range(struct account *account,
-                                                char *lower, char *upper,
-                                                struct consume_record **begin,
-                                                struct consume_record **end)
+E_ACCOUNT_ACCESS_TYPE
+account_query_by_date_range(struct account *account,
+                            char *lower, char *upper,
+                            struct consume_record **begin_return,
+                            struct consume_record **end_return)
 {
-    E_ACCOUNT_READ_TYPE ret;
+    E_ACCOUNT_ACCESS_TYPE state;
+    struct consume_record *b, *e;
 
-    if ((ret = account_sort_by_date(account, 1)) != E_OK)
-        return ret;
+    if ((state = account_sort_by_date(account, 0)) != E_OK)
+        return state;
 
-    for (*begin = account->record;
-         *begin != NULL && strcmp(lower, (*begin)->consumed) > 0;
-         *begin = (*begin)->next)
+    for (b = account->record;
+         b != NULL && strcmp(lower, b->consumed) > 0;
+         b = b->next)
         ;
-    for (*end = *begin;
-         *end != NULL && strcmp(upper, (*end)->consumed) >= 0;
-         *end = (*end)->next)
+    for (e = b;
+         e != NULL && strcmp(upper, e->consumed) >= 0;
+         e = e->next)
         ;
+    *begin_return = b;
+    *end_return = e;
 
-    return ret;
+    return state;
 }
 
-E_ACCOUNT_READ_TYPE account_query_by_sum(struct account *account, double sum,
-                                         struct consume_record **begin,
-                                         struct consume_record **end)
+E_ACCOUNT_ACCESS_TYPE
+account_query_by_sum(struct account *account, double sum,
+                     struct consume_record **begin_return,
+                     struct consume_record **end_return)
 {
-    E_ACCOUNT_READ_TYPE ret;
+    E_ACCOUNT_ACCESS_TYPE state;
+    struct consume_record *b, *e;
 
-    if ((ret = account_sort_by_sum(account, 0)) != E_OK)
-        return ret;
+    if ((state = account_sort_by_date(account, 0)) != E_OK)
+        return state;
 
-    for (*begin = account->record;
-         *begin != NULL && sum > (*begin)->sum;
-         *begin = (*begin)->next)
+    for (b = account->record;
+         b != NULL && sum > b->sum;
+         b = b->next)
         ;
-    for (*end = (*begin);
-         *end != NULL && sum <= (*end)->sum;
-         *end = (*end)->next)
+    for (e = b;
+         e != NULL && sum <= e->sum;
+         e = e->next)
         ;
-    
-    return ret;
+    *begin_return = b;
+    *end_return = e;
+
+    return state;
 }

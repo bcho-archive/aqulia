@@ -5,50 +5,111 @@
 
 #include "test.h"
 #include "../src/core/account.h"
+#include "../src/core/consume_record.h"
 
-#define SEP printf("---------------------\n")
+#define PRT(n) printf("%s %.2lf %s\n", n->consumed, n->balance, n->pos->name);
+#define PRTC(b, e) for (;b != NULL && b != e;b = b->next) PRT(b);printf("end\n");
 
-void print_records(struct consume_record *record);
-
-int main(int argc, char *argv[])
+int main()
 {
     int cardno;
     struct account *account;
+    E_ACCOUNT_ACCESS_TYPE state;
+    E_ACCOUNT_CONSUME_TYPE cstate;
+    struct consume_record *b, *e;
 
-    if (argc < 2)
-        return 1;
+    /* account read / destory */
+    scanf("%d", &cardno);
+    state = account_read(cardno, &account);
+    printf("%d from %s\n", account->cardno, account->faculty);
+    printf("state: %d\n", state);
 
-    cardno = atoi(argv[argc - 1]);
-    if (account_read(cardno, &account) == E_OK) {
-        printf("cardno: %d\n", account->info->cardno);
-        printf("balance: %.2f\n", account->info->balance);
-
-        account_sort_by_date(account, 0);
-        print_records(account->record);
-        SEP;
-        account_sort_by_sum(account, 0);
-        print_records(account->record);
-        SEP;
-        account_sort_by_transcation(account, 0);
-        print_records(account->record);
-
-        account_destory(account);
-    }
-
-    return 0;
-}
-
-#define PRT(record) printf("consumed: %s received: %s\n"\
-                           "sum: %.2lf balance: %.2lf\n"\
-                           "type: %d\ntranscation: %d pos: %s\n\n",\
-                           record->consumed, record->received, record->sum,\
-                           record->balance, record->consume_type, record->pos->transcation,\
-                           record->pos->name)
-
-void print_records(struct consume_record *record)
-{
-    struct consume_record *p;
+    /* (un)freeze */
+    /*
+    if (state == E_FREEZE)
+        state = account_unfreeze(account);
+    else
+        state = account_freeze(account);
     
-    for (p = record;p != NULL;p = p->next)
-        PRT(p);
+    printf("state: %d\n", state);
+    */
+    
+    /* save */
+    account->balance += 50.0;
+    state = account_save(account);
+    if (state == E_FREEZE)
+        printf("cannot save\n");
+    printf("state: %d\n", state);
+
+    /* query */
+    account_query_by_date(account, "20130109", &b, &e);
+    PRTC(b, e);
+    account_query_by_date(account, "20130110", &b, &e);
+    PRTC(b, e);
+    account_query_by_date(account, "20130113", &b, &e);
+    PRTC(b, e);
+    account_query_by_date(account, "20130114", &b, &e);
+    PRTC(b, e);
+
+    account_query_by_date_range(account, "20130109", "20130114", &b, &e);
+    PRTC(b, e);
+    account_query_by_date_range(account, "20130109", "20130101", &b, &e);
+    PRTC(b, e);
+
+    account_query_by_sum(account, 0.1, &b, &e);
+    PRTC(b, e);
+    account_query_by_sum(account, 0.2, &b, &e);
+    PRTC(b, e);
+    account_query_by_sum(account, 100.1, &b, &e);
+    PRTC(b, e);
+
+    /* sort */
+    printf("sorting\n");
+    account_sort_by_date(account, 0);
+    b = account->record;
+    PRTC(b, NULL);
+    account_sort_by_date(account, 1);
+    b = account->record;
+    PRTC(b, NULL);
+
+    /*
+    account_sort_by_sum(account, 0);
+    b = account->record;
+    PRTC(b, NULL);
+    account_sort_by_sum(account, 1);
+    b = account->record;
+    PRTC(b, NULL);
+
+    account_sort_by_transcation(account, 0);
+    b = account->record;
+    PRTC(b, NULL);
+    account_sort_by_transcation(account, 1);
+    b = account->record;
+    PRTC(b, NULL);
+    */
+
+    /* consume */
+    printf("consume\n");
+    cstate = account_consume(account, "20130622", "20130622", 10.0, CONSUME_POS, "test machine");
+    printf("consume state: %d\n", cstate);
+    b = account->record;
+    PRTC(b, NULL);
+    /*
+    account_query_by_date(account, "20130109", &b, &e);
+    account_consume_delete(account, b);
+    b = account->record;
+    PRTC(b, NULL);
+    */
+    printf("sorting\n");
+    account_sort_by_date(account, 0);
+    b = account->record;
+    PRTC(b, NULL);
+    account_sort_by_date(account, 1);
+    b = account->record;
+    PRTC(b, NULL);
+
+
+    account_save(account);
+    account_destory(account);
+    return 0;
 }

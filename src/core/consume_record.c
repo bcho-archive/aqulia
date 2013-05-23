@@ -1,19 +1,51 @@
 #include "consume_record.h"
-#include "csv.h"
-#include "sort.h"
-#include "../debug.h"
-#include "../utils.h"
+#include "../utils/csv.h"
+#include "../utils/debug.h"
+#include "../utils/misc.h"
+#include "../utils/link_sort.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <assert.h>
 
-#define max(a, b) (((a) > (b)) ? (a) : (b))
+#define DEFAULT_HEADER "consumed,received,sum,balance,consume_type,transcation,pos"
 
-#define HEADER_STR "consumed,received,sum,balance,consume_type,transcation,pos"
+/* sorting helpers */
+static void *
+next(void *cur) {
+    return ((struct consume_record *) cur)->next;
+}
 
-static inline void prepare_header(struct csv_header *header)
+static void
+set_next(void *node, void *value)
+{
+    ((struct consume_record *) node)->next = value;    
+}
+
+static int
+cmp(void *a, void *b)
+{
+    struct consume_record c, d;
+    int ret;
+
+    /* TODO FIXME
+     * strange behaviour when sorting
+     */
+    c = *((struct consume_record *) a);
+    d = *((struct consume_record *) b);
+    ret = strcmp(c.consumed, d.consumed);
+    if (ret == 0)
+        if (c.balance > d.balance)
+            return -1;
+        if (c.balance < d.balance)
+            return 1;
+    return ret;
+}
+
+/* declare csv col type */
+inline static void
+prepare_header(struct csv_header *header)
 {
     struct csv_header *p;
 
@@ -31,36 +63,21 @@ static inline void prepare_header(struct csv_header *header)
     sprintf(p->fmt, "%%d");
 }
 
-static inline struct csv_header *create_header()
+/* convert a record into a row */
+inline static void
+prepare_row(struct csv_row *row, struct consume_record *record)
 {
-    char buf[] = HEADER_STR;
-    struct csv_header *header;
-
-    header = csv_read_header_from_string(buf);
-    prepare_header(header);
-    return header;
-}
-
-static inline void assign_str(struct csv_row *row, char *str)
-{
-    row->svalue = malloc(sizeof(char) * (strlen(str) + 1));
-    if (row == NULL)
-        ERROR("malloc");
-    strcpy(row->svalue, str);
-}
-
-static inline void assign_row(struct csv_row *row, struct consume_record *record)
-{
-    assign_str(csv_find_row(row, "consumed"), record->consumed);
-    assign_str(csv_find_row(row, "received"), record->received);
+    csv_find_row(row, "consumed")->svalue = strdup(record->consumed);
+    csv_find_row(row, "received")->svalue = strdup(record->consumed);
     csv_find_row(row, "sum")->dvalue = record->sum;
     csv_find_row(row, "balance")->dvalue = record->balance;
-    csv_find_row(row, "consume_type")->ivalue = record->consume_type;
+    csv_find_row(row, "consume_type")->ivalue = record->type;
     csv_find_row(row, "transcation")->ivalue = record->pos->transcation;
-    assign_str(csv_find_row(row, "pos"), record->pos->name);
+    csv_find_row(row, "pos")->svalue = strdup(record->pos->name);
 }
 
-struct consume_record *consume_record_read(char *fname)
+struct consume_record *
+consume_record_read(char *fname)
 {
     struct consume_record *head, *prev, *p;
     FILE *stream;
@@ -69,30 +86,30 @@ struct consume_record *consume_record_read(char *fname)
 
     touch_file(fname);
     if ((stream = fopen(fname, "r")) == NULL)
-        ERROR("read consume record");
+        ERROR("read consume record: %s", fname);
+
     header = csv_read_header(stream);
     if (header == NULL)
-        header = csv_read_header_from_string(HEADER_STR);
+        header = csv_read_header_from_string(DEFAULT_HEADER);
     prepare_header(header);
 
     head = NULL;
     while ((row = csv_read_row(stream, header)) != NULL) {
-        p = malloc(sizeof(struct consume_record));
-        if (p == NULL)
-            ERROR("malloc");
-        p->pos = malloc(sizeof(struct pos_info));
-        if (p->pos == NULL)
+        if ((p = malloc(sizeof(struct consume_record))) == NULL)
             ERROR("malloc");
 
         p->next = NULL;
-        strcpy(p->consumed, csv_find_row(row, "consumed")->svalue);
-        strcpy(p->received, csv_find_row(row, "received")->svalue);
+        p->consumed = strdup(csv_find_row(row, "consumed")->svalue);
+        p->received = strdup(csv_find_row(row, "received")->svalue);
         p->sum = csv_find_row(row, "sum")->dvalue;
         p->balance = csv_find_row(row, "balance")->dvalue;
-        p->consume_type = csv_find_row(row, "consume_type")->ivalue;
+        p->type = csv_find_row(row, "consume_type")->ivalue;
+        if ((p->pos = malloc(sizeof(struct POS))) == NULL)
+            ERROR("malloc");
+        p->pos->name = strdup(csv_find_row(row, "pos")->svalue);
         p->pos->transcation = csv_find_row(row, "transcation")->ivalue;
-        strcpy(p->pos->name, csv_find_row(row, "pos")->svalue);
 
+        /* create link list */
         if (head == NULL)
             head = p;
         else
@@ -106,168 +123,80 @@ struct consume_record *consume_record_read(char *fname)
     return head;
 }
 
-static void *next(void *cur) {
-    return ((struct consume_record *) cur)->next;
-}
-
-static void set_next(void *node, void *value)
+void
+consume_record_save(char *fname, struct consume_record **rec)
 {
-    ((struct consume_record *) node)->next = value;    
-}
-
-static int cmp(void *a, void *b)
-{
-    struct consume_record *c, *d;
-    int ret;
-
-    c = (struct consume_record *) a; d = (struct consume_record *) b;
-    ret = strcmp(c->consumed, d->consumed);
-    return ret;
-    if (ret == 0)
-        if (c->balance > d->balance)
-            ret = 1;
-        else if (c->balance < d->balance)
-            ret = -1;
-    return ret * -1;
-}
-
-void consume_record_save(char *fname, struct consume_record **rec)
-{
-    struct consume_record *record;
+    struct consume_record *copy;
     struct csv_header *header;
     struct csv_row *row;
     FILE *stream;
 
     if ((stream = fopen(fname, "w")) == NULL)
-        ERROR("write %s", fname);
+        ERROR("write consume record: %s", fname);
 
-    header = create_header();
+    header = csv_read_header_from_string(DEFAULT_HEADER);
+    prepare_header(header);
     csv_write_header(stream, header);
 
-    record = *rec;
-    sort((void **) &record, next, set_next, cmp, 1);
-    *rec = record;
-    for (;record != NULL;record = record->next) {
+    /* sort by date & balance before saving to file */
+    link_sort((void **) rec, next, set_next, cmp, 0);
+    for (copy = *rec;copy != NULL;copy = copy->next) {
         row = csv_create_row(header);
-        assign_row(row, record);
+        prepare_row(row, copy);
         csv_write_row(stream, row);
         csv_destory_row(row);
     }
-
     csv_destory_header(header);
     fclose(stream);
 }
 
-void consume_record_destory(struct consume_record *record)
+void
+consume_record_destory(struct consume_record *record)
 {
-    struct consume_record *p;
+    struct consume_record *prev;
 
     while (record != NULL) {
-        p = record->next;
-        free(record->pos);
+        prev = record->next;
+        if (record->pos != NULL) {
+            free(record->pos->name);
+            free(record->pos);
+        }
+        free(record->consumed);
+        free(record->received);
         free(record);
-        record = p;
+
+        record = prev;
     }
 }
 
-struct consume_record *consume_record_create(const char *consumed,
-        const char *received, double sum, double balance,
-        consume_type_t consume_type, const char *pos,
-        struct consume_record *record)
+struct consume_record *
+consume_record_create(const char *consumed, const char *received,
+                      double sum, double balance,
+                      CONSUME_TYPE_T type, const char *pos_name,
+                      struct consume_record *prev_record)
 {
     struct consume_record *new;
-    struct pos_info *infos, *p;
+    struct POS *pos, *p;
 
-    infos = pos_infos_get(record);
-    new = malloc(sizeof(struct consume_record));
-    if (new == NULL)
+    if ((new = malloc(sizeof(struct consume_record))) == NULL)
         ERROR("malloc");
     new->next = NULL;
-    new->pos = malloc(sizeof(struct pos_info));
-    if (new->pos == NULL)
-        ERROR("malloc");
-    strcpy(new->consumed, consumed);
-    if (received == NULL)
-        strcpy(new->received, consumed);
-    else
-        strcpy(new->received, received);
     new->sum = sum;
     new->balance = balance;
-    new->consume_type = consume_type;
-    p = pos_infos_query_by_name(pos, infos);
-    if (p == NULL)
-        p = pos_infos_create(pos, 0);
-    else
-        p = pos_infos_dup(p);
-    new->pos = p;
-    new->pos->transcation++;
-    pos_infos_destory(infos);
-    
-    return new;
-}
-
-struct pos_info *pos_infos_query_by_name(const char *name,
-                                         struct pos_info *infos)
-{
-    for (;infos != NULL && strcmp(infos->name, name) != 0;infos = infos->next)
-        ;
-    return infos;
-}
-
-struct pos_info *pos_infos_get(struct consume_record *record)
-{
-    struct pos_info *head, *prev, *p;
-
-    head = NULL;
-    for (;record != NULL;record = record->next) {
-        p = pos_infos_query_by_name(record->pos->name, head);
-        if (p == NULL) {
-            p = malloc(sizeof(struct pos_info));
-            if (p == NULL)
-                ERROR("malloc");
-            p->transcation = record->pos->transcation;
-            strcpy(p->name, record->pos->name);
-            p->next = NULL;
-
-            if (head == NULL)
-                head = p;
-            else
-                prev->next = p;
-            prev = p;
-        } else {
-            p->transcation = max(p->transcation, record->pos->transcation);
-        }
-    }
-
-    return head;
-}
-
-struct pos_info *pos_infos_create(const char *name, int transcation)
-{
-    struct pos_info *new;
-
-    new = malloc(sizeof(struct pos_info));
-    if (new == NULL)
+    new->consumed = strdup(consumed);
+    new->received = strdup((received == NULL) ? consumed : received);
+    new->type = type;
+    if ((new->pos = malloc(sizeof(struct POS))) == NULL)
         ERROR("malloc");
-    strcpy(new->name, name);
-    new->transcation = transcation;
+    pos = POS_get(prev_record);
+    p = POS_query_by_name(pos_name, pos);
+    if (p == NULL)
+        p = POS_create(pos_name, 0);
+    else
+        p = POS_dup(p);
+    p->transcation++;
+    new->pos = p;
+    POS_destory(pos);
+
     return new;
-}
-
-struct pos_info *pos_infos_dup(struct pos_info *info)
-{
-    if (info == NULL)
-        return NULL;
-    return pos_infos_create(info->name, info->transcation);
-}
-
-void pos_infos_destory(struct pos_info *infos)
-{
-    struct pos_info *p;
-
-    while (infos != NULL) {
-        p = infos->next;
-        free(infos);
-        infos = p;
-    }
 }

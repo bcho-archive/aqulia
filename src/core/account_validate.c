@@ -1,29 +1,34 @@
 #include "account.h"
-#include "../utils.h"
+#include "../utils/misc.h"
+#include "../utils/debug.h"
+#include "../utils/str.h"
 
 #include <stdio.h>
 #include <string.h>
 
-#define MAXLINE 1024
+#define LINE_MAX 1024
 
-inline static int validate_freeze(const char *file)
+inline static int
+validate_freeze(const char *fname)
 {
     FILE *stream;
-    char line[MAXLINE];
+    char line[LINE_MAX];
 
-    if ((stream = fopen(file, "r")) == NULL)
-        return 1;
+    touch_file((char *) fname);
+    if ((stream = fopen(fname, "r")) == NULL)
+        return 0;
 
-    fgets(line, MAXLINE, stream);
+    fgets(line, LINE_MAX, stream);
     trim(line);
     if (strcmp(line, "1") == 0)
-        return 0;
-    return 1;
+        return 1;
+    return 0;
 }
 
-E_ACCOUNT_READ_TYPE account_validate(struct account *account)
+E_ACCOUNT_ACCESS_TYPE
+account_validate(struct account *account)
 {
-    if (validate_freeze(account->freeze_file))
+    if (!validate_freeze(account->ffreeze) && account->state == CARD_USABLE)
         return E_OK;
     else
         return E_FREEZE;

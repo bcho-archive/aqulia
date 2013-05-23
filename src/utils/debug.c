@@ -1,10 +1,22 @@
 #include "debug.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
-void ERROR(const char *fmt, ...)
+void
+DEBUG(char *fmt, ...)
+{
+    va_list list;
+
+    va_start(list, fmt);
+    vfprintf(stderr, fmt, list);
+    va_end(list);
+    fprintf(stderr, "\n");
+}
+
+void
+ERROR(char *fmt, ...)
 {
     va_list list;
 
@@ -13,14 +25,4 @@ void ERROR(const char *fmt, ...)
     va_end(list);
     fprintf(stderr, "\n");
     abort();
-}
-
-void DEBUG(const char *fmt, ...)
-{
-    va_list list;
-
-    va_start(list, fmt);
-    vfprintf(stderr, fmt, list);
-    va_end(list);
-    fprintf(stderr, "\n");
 }

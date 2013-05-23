@@ -1,10 +1,18 @@
+#include "str.h"
+
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #include <ctype.h>
 
-char *trim(char *str)
+char *
+trim(char *str)
 {
     char *left, *right, *p;
+
+    if (str == NULL)
+        return NULL;
 
     left = str;
     right = str + strlen(str) - 1;
@@ -27,7 +35,8 @@ char *trim(char *str)
     return str;
 }
 
-char *split(char *str, char delim)
+char *
+split(char *str, char delim)
 {
     char *p;
 
@@ -38,12 +47,4 @@ char *split(char *str, char delim)
      return p + 1;
     }
     return NULL;
-}
-
-void touch_file(char *fname)
-{
-    FILE *stream;
-
-    stream = fopen(fname, "a");
-    fclose(stream);
 }

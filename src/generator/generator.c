@@ -22,7 +22,7 @@ struct generate_limit {
     int cb, ce;                                             /* cardno */
     int eb, ee;                                             /* expire */
     double bb, be;                                          /* balance */
-    card_state_t sb, se;                                    /* state */
+    CARD_STATE_T sb, se;                                    /* state */
     char school[5][50], faculty[5][50], major[5][50];       /* faculty */
     int sc, fc, mc;                                         /* faculty selection count */
     int ml, cl;                                             /* consume history */
@@ -86,7 +86,7 @@ inline void generate_date(int yb, int ye, char *dest)
 
 /* generate personal */
 void generate_personal(struct generate_limit limit,
-                       struct personal_info *person)
+                       struct account *person)
 {
     person->cardno = rand() % (limit.ce - limit.cb) + limit.cb;
     generate_date(limit.eb, limit.ee, person->expire);
@@ -99,7 +99,7 @@ void generate_personal(struct generate_limit limit,
 }
 /* generate personal */
 
-void save_personal(struct personal_info person)
+void save_personal(struct account person)
 {
     char fname[50];
     FILE *stream;
@@ -114,7 +114,7 @@ void save_personal(struct personal_info person)
 }
 
 /* generate pos */
-void generate_pos(struct generate_limit limit, struct pos_info *pos) {
+void generate_pos(struct generate_limit limit, struct POS *pos) {
     int no, num;
 
     no = rand() % 100;
@@ -127,7 +127,7 @@ void generate_pos(struct generate_limit limit, struct pos_info *pos) {
 
 /* generate consume history */
 char *generate_history(int year, int month, int day, double cost,
-                       double balance, struct pos_info *pos)
+                       double balance, struct POS *pos)
 {
     char *history;
     char buf[150];
@@ -140,8 +140,8 @@ char *generate_history(int year, int month, int day, double cost,
     return history;
 }
 
-void save_consume(struct generate_limit limit, struct personal_info *person,
-                  struct pos_info *pos)
+void save_consume(struct generate_limit limit, struct account *person,
+                  struct POS *pos)
 {
     int i, j, month, day;
     double cost;
@@ -187,7 +187,7 @@ void save_consume(struct generate_limit limit, struct personal_info *person,
 }
 /* generate history */
 
-void prepeare_path(struct personal_info person)
+void prepeare_path(struct account person)
 {
     char command[30];
 
@@ -198,15 +198,15 @@ void prepeare_path(struct personal_info person)
 void generate(struct generate_limit limit, int count)
 {
     int i;
-    struct pos_info *pos;
-    struct personal_info person;
+    struct POS *pos;
+    struct account person;
     FILE *stream;
 
     system("rm -rf "OUTPUT_PREFIX);
     system("mkdir -p "OUTPUT_PREFIX);
 
     /* generate pos */
-    pos = malloc(sizeof(struct pos_info) * limit.pc);
+    pos = malloc(sizeof(struct POS) * limit.pc);
     for (i = 0;i < limit.pc;i++)
         generate_pos(limit, pos + i);
 

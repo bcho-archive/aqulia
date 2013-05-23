@@ -1,19 +1,12 @@
-include_directories (.)
+include_directories (. ../utils)
 
-add_library (csv csv.c)
-target_link_libraries (csv utils _debug)
+add_library (consume_record consume_record.c POS.c)
+target_link_libraries (consume_record csv misc _debug link_sort)
 
-add_library (sort sort.c)
+add_library (account account.c account_validate.c account_freeze.c
+                     account_sort.c account_query.c
+                     account_consume.c)
+target_link_libraries (account consume_record csv str misc _debug link_sort)
 
-add_library (personal_info personal_info.c)
-target_link_libraries (personal_info csv utils _debug)
-
-add_library (consume_record consume_record.c)
-target_link_libraries (consume_record csv utils _debug sort)
-
-add_library (account account.c account_validate.c account_sort.c account_query.c
-                     account_freeze.c account_consume.c)
-target_link_libraries (account personal_info consume_record _debug)
-
-install (FILES account.h personal_info.h consume_record.h
+install (FILES account.h consume_record.h POS.h
          DESTINATION "include/aqulia")

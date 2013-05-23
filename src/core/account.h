@@ -1,18 +1,19 @@
+/* account */
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
 
-#include "personal_info.h"
 #include "consume_record.h"
 
-#define PERSONAL_INFO_FILE "personal.dat"
-#define CONSUME_RECORD_FILE "fee.dat"
-#define FREEZE_FILE "freeze.dat"
-#define CONSUME_UNDO_FILE "fee_undo.dat"
+typedef enum {
+    CARD_USABLE,
+    CARD_FREEZED,
+    CARD_LOST
+} CARD_STATE_T;
 
 typedef enum {
     E_OK,
     E_FREEZE
-} E_ACCOUNT_READ_TYPE;
+} E_ACCOUNT_ACCESS_TYPE;
 
 typedef enum {
     E_CONSUME_OK,
@@ -22,51 +23,71 @@ typedef enum {
     E_CONSUME_FAILED
 } E_ACCOUNT_CONSUME_TYPE;
 
-struct account {
-    struct personal_info *info;
-    struct consume_record *record;
+/* default file name */
+#define FPERSONAL "personal.dat"
+#define FFREEZE "freeze.dat"
+#define FCONSUME_RECORD "fee.dat"
+#define FCONSUME_UNDO "fee_undelete.dat"
 
-    char *personal_file;
-    char *freeze_file;
-    char *consume_record;
-    char *consume_undo;
+struct account {
+    /* data file name */
+    char *fpersonal;
+    char *ffreeze;
+    char *fconsume_record;
+    char *fconsume_undo;
+
+    /* personal infomation */
+    int cardno;
+    char *expire;
+    double balance;
+    CARD_STATE_T state;
+    char *faculty;
+
+    /* consume record */
+    struct consume_record *record;
 };
 
-E_ACCOUNT_READ_TYPE account_read(int cardno, struct account **account);
-void account_save(struct account *account);
+E_ACCOUNT_ACCESS_TYPE account_read(int cardno, struct account **account_return);
+E_ACCOUNT_ACCESS_TYPE account_save(struct account *account);
+void account_save_force(struct account *account);
 void account_destory(struct account *account);
 
-/* validate */
-E_ACCOUNT_READ_TYPE account_validate(struct account *account);
-
-/* query */
-E_ACCOUNT_READ_TYPE account_query_by_date(struct account *account, char *date,
-                                          struct consume_record **begin,
-                                          struct consume_record **end);
-E_ACCOUNT_READ_TYPE account_query_by_date_range(struct account *account,
-                                                char *lower, char *upper,
-                                                struct consume_record **begin,
-                                                struct consume_record **end);
-E_ACCOUNT_READ_TYPE account_query_by_sum(struct account *account, double sum,
-                                         struct consume_record **begin,
-                                         struct consume_record **end);
-
-/* sort */
-E_ACCOUNT_READ_TYPE account_sort_by_date(struct account *account, int reverse);
-E_ACCOUNT_READ_TYPE account_sort_by_sum(struct account *account, int reverse);
-E_ACCOUNT_READ_TYPE account_sort_by_transcation(struct account *account, int reverse);
-
 /* freeze */
-E_ACCOUNT_READ_TYPE account_freeze(struct account *account);
-E_ACCOUNT_READ_TYPE account_unfreeze(struct account *account);
+E_ACCOUNT_ACCESS_TYPE account_freeze(struct account *account);
+E_ACCOUNT_ACCESS_TYPE account_unfreeze(struct account *account);
 
 /* consume */
-E_ACCOUNT_CONSUME_TYPE account_consume(struct account *account,
-                                       const char *consumed, const char *received,
-                                       double sum, consume_type_t consume_type,
-                                       const char *pos);
-E_ACCOUNT_CONSUME_TYPE account_consume_delete(struct account *account,
-                                              struct consume_record *record);
+E_ACCOUNT_CONSUME_TYPE
+account_consume(struct account *account,
+                const char *consumed, const char *received,
+                double sum, CONSUME_TYPE_T consume_type, const char *pos);
+E_ACCOUNT_CONSUME_TYPE
+account_consume_delete(struct account *account, struct consume_record *record);
 
-#define DAILY_CONSUME_LIMIT 50
+/* validate */
+E_ACCOUNT_ACCESS_TYPE account_validate(struct account *account);
+
+/* query */
+E_ACCOUNT_ACCESS_TYPE
+account_query_by_date(struct account *account, char *date,
+                      struct consume_record **begin_return,
+                      struct consume_record **end_return);
+E_ACCOUNT_ACCESS_TYPE
+account_query_by_date_range(struct account *account,
+                            char *lower, char *upper,
+                            struct consume_record **begin_return,
+                            struct consume_record **end_return);
+E_ACCOUNT_ACCESS_TYPE
+account_query_by_sum(struct account *account, double sum,
+                     struct consume_record **begin_return,
+                     struct consume_record **end_return);
+
+/* sort */
+E_ACCOUNT_ACCESS_TYPE
+account_sort_by_date(struct account *account, int reverse);
+E_ACCOUNT_ACCESS_TYPE
+account_sort_by_sum(struct account *account, int reverse);
+E_ACCOUNT_ACCESS_TYPE
+account_sort_by_transcation(struct account *account, int reverse);
+
 #endif

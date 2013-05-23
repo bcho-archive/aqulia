@@ -1,10 +1,11 @@
-#include "sort.h"
+#include "link_sort.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
-static void *find_mid(void *list, void *(*next)(void *))
+static void *
+find_mid(void *list, void *(*next)(void *))
 {
     void *slow, *fast;
 
@@ -20,15 +21,17 @@ static void *find_mid(void *list, void *(*next)(void *))
     return slow;
 }
 
-static void *merge(void *left, void *right, void *(*next)(void *),
-                   void (*set_next)(void *, void *),
-                   int (*cmp)(void *, void *), int reverse)
+static void *
+merge(void *left, void *right, void *(*next)(void *), 
+      void (*set_next)(void *, void *),
+      int (*cmp)(void *, void *), int reverse)
 {
     void *head, *prev, *p;
 
     head = NULL;
+    p = head;
     while (left != NULL && right != NULL) {
-        if (cmp(left, right) > 0 && !reverse) {
+        if (cmp(left, right) >= 0 && !reverse) {
             p = left;
             left = next(left);
         } else {
@@ -42,6 +45,7 @@ static void *merge(void *left, void *right, void *(*next)(void *),
             set_next(prev, p);
         prev = p;
     }
+    assert(p != NULL);
     if (left == NULL)
         set_next(p, right);
     else
@@ -50,17 +54,18 @@ static void *merge(void *left, void *right, void *(*next)(void *),
     return head;
 }
 
-inline static void *_sort(void *list, void *(*next)(void *),
-                          void (*set_next)(void *, void *),
-                          int (*cmp)(void *, void *), int reverse)
+inline static void *
+_sort(void *list, void *(*next)(void *), void (*set_next)(void *, void *),
+      int (*cmp)(void *, void *), int reverse)
 {
     void *mid, *left, *right;
 
     if (list == NULL || next(list) == NULL)
         return list;
 
-    mid = find_mid(list, next);
     left = list;
+    mid = find_mid(list, next);
+    assert(mid != NULL);
     right = next(mid);
     set_next(mid, NULL);
 
@@ -69,7 +74,8 @@ inline static void *_sort(void *list, void *(*next)(void *),
                  next, set_next, cmp, reverse);
 }
 
-void sort(void **list, void *(*next)(void *), void (*set_next)(void *, void *),
+void
+link_sort(void **list, void *(*next)(void *), void (*set_next)(void *, void *),
           int (*cmp)(void *, void *), int reverse)
 {
     *list = _sort(*list, next, set_next, cmp, reverse);

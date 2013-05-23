@@ -1,6 +1,6 @@
 #include "csv.h"
-#include "../utils.h"
-#include "../debug.h"
+#include "str.h"
+#include "debug.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +9,8 @@
 #define LINE_MAX 1024
 #define DELIMITER ','
 
-struct csv_header *csv_read_header_from_string(char *s)
+struct csv_header *
+csv_read_header_from_string(char *s)
 {
     char *str, *value, *buf, *dummy;
     struct csv_header *p, *prev, *head;
@@ -44,7 +45,8 @@ struct csv_header *csv_read_header_from_string(char *s)
     return head;
 }
 
-struct csv_header *csv_read_header(FILE *stream)
+struct csv_header *
+csv_read_header(FILE *stream)
 {
     char buf[LINE_MAX];
 
@@ -54,11 +56,12 @@ struct csv_header *csv_read_header(FILE *stream)
     return csv_read_header_from_string(buf);
 }
 
-struct csv_row *csv_read_row(FILE *stream, struct csv_header *header)
+struct csv_row *
+csv_read_row(FILE *stream, struct csv_header *header)
 {
     char *str, *value;
     char buf[LINE_MAX];
-    struct csv_row *p, *prev, *head;
+    struct csv_row *p, *head;
     struct csv_header *h;
 
     if (header == NULL)
@@ -102,7 +105,8 @@ struct csv_row *csv_read_row(FILE *stream, struct csv_header *header)
 }
 
 /* create an empty row basic on header */
-struct csv_row *csv_create_row(struct csv_header *header)
+struct csv_row *
+csv_create_row(struct csv_header *header)
 {
     struct csv_row *head, *p, *prev;
 
@@ -128,7 +132,8 @@ struct csv_row *csv_create_row(struct csv_header *header)
     return head;
 }
 
-void csv_write_header(FILE *stream, struct csv_header *header)
+void
+csv_write_header(FILE *stream, struct csv_header *header)
 {
     for (;header != NULL && header->next != NULL;header = header->next)
         fprintf(stream, "%s%c", header->name, DELIMITER);
@@ -136,7 +141,8 @@ void csv_write_header(FILE *stream, struct csv_header *header)
         fprintf(stream, "%s\n", header->name);
 }
 
-static void _write_field(FILE *stream, struct csv_row *row)
+static void
+_write_field(FILE *stream, struct csv_row *row)
 {
    switch (row->type) {
         case CSV_INT:
@@ -155,7 +161,8 @@ static void _write_field(FILE *stream, struct csv_row *row)
    }
 }
 
-void csv_write_row(FILE *stream, struct csv_row *row)
+void
+csv_write_row(FILE *stream, struct csv_row *row)
 {
     for (;row != NULL && row->next != NULL;row = row->next) {
         _write_field(stream, row);
@@ -166,7 +173,8 @@ void csv_write_row(FILE *stream, struct csv_row *row)
     fprintf(stream, "\n");
 }
 
-struct csv_header *csv_find_header(struct csv_header *header, const char *key)
+struct csv_header *
+csv_find_header(struct csv_header *header, const char *key)
 {
     struct csv_header *needle;
 
@@ -176,7 +184,8 @@ struct csv_header *csv_find_header(struct csv_header *header, const char *key)
     return NULL;
 }
 
-struct csv_row *csv_find_row(struct csv_row *row, const char *key)
+struct csv_row *
+csv_find_row(struct csv_row *row, const char *key)
 {
     struct csv_row *needle;
 
@@ -186,7 +195,8 @@ struct csv_row *csv_find_row(struct csv_row *row, const char *key)
     return NULL;
 }
 
-void csv_destory_header(struct csv_header *header)
+void
+csv_destory_header(struct csv_header *header)
 {
     struct csv_header *p;
 
@@ -198,7 +208,8 @@ void csv_destory_header(struct csv_header *header)
     }
 }
 
-void csv_destory_row(struct csv_row *row)
+void
+csv_destory_row(struct csv_row *row)
 {
     struct csv_row *p;
 
