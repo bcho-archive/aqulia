@@ -1,4 +1,4 @@
-#include "link_sort.h"
+#include "linksort.h"
 
 #include <stdio.h>
 #include <stdlib.h>

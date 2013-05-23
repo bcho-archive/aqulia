@@ -1,4 +1,4 @@
-#include "consume_record.h"
+#include "record.h"
 #include "../utils/debug.h"
 
 #include <stdlib.h>

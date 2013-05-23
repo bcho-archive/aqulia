@@ -2,7 +2,7 @@
 #ifndef ACCOUNT_H
 #define ACCOUNT_H
 
-#include "consume_record.h"
+#include "record.h"
 
 typedef enum {
     CARD_USABLE,
