@@ -5,7 +5,7 @@
 
 #include "test.h"
 #include "../src/core/account.h"
-#include "../src/core/consume_record.h"
+#include "../src/core/record.h"
 
 #define PRT(n) printf("%s %.2lf %s\n", n->consumed, n->balance, n->pos->name);
 #define PRTC(b, e) for (;b != NULL && b != e;b = b->next) PRT(b);printf("end\n");
