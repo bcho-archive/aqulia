@@ -1,7 +1,4 @@
 include_directories (. ../vendor)
 
-add_executable (test test.c)
-target_link_libraries (test conio)
-
-install (TARGETS test
-         DESTINATION "bin")
+add_library (unit unit.c)
+target_link_libraries (unit conio _debug)
