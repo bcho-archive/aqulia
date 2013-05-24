@@ -1,5 +1,6 @@
 #include "../src/vendor/conio.h"
 #include "../src/cli/unit.h"
+#include "../src/cli/screen.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,6 +16,7 @@ int main(int argc, char *argv[])
         cprintf("%s", b->buf);
         b = b->next;
     }
+    screen_draw_border(argv[0]);
     getch();
     clrscr();
     
@@ -26,6 +28,7 @@ int main(int argc, char *argv[])
         cprintf("%s", b->buf);
         b = b->next;
     }
+    screen_draw_border(argv[0]);
     getch();
     clrscr();
 
@@ -37,6 +40,7 @@ int main(int argc, char *argv[])
         cprintf("%s", b->buf);
         b = b->next;
     }
+    screen_draw_border(argv[0]);
     getch();
     clrscr();
 

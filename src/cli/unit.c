@@ -7,10 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INNER_WIDTH (WIN_WIDTH - BORDER_WIDTH * 2)
-#define INNER_HEIGHT (WIN_HEIGHT - BORDER_WIDTH * 2)
-#define PADDING 1
-
 #define NORMAL_UNIT_PADDING 5
 
 /* create a text block which width is shorter than line_width */

@@ -7,7 +7,7 @@ include_directories (. ../src ../src/core ../src/utils ../src/cli)
 #target_link_libraries (test_account account)
 
 add_executable (test_unit test_unit.c)
-target_link_libraries (test_unit unit)
+target_link_libraries (test_unit unit screen)
 
 install (TARGETS test_unit
          DESTINATION "bin")
