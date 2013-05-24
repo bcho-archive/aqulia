@@ -1,3 +1,5 @@
+PROJECT_NAME = aqulia
+
 CMAKE = `which cmake`
 TARGET_DIR = build
 SOURCE_DIR = $(CURDIR)
@@ -15,7 +17,24 @@ prepare:
 build: prepare
 	cd $(TARGET_DIR); $(MAKE); $(MAKE) install
 
+pack:
+	zip $(PROJECT_NAME).zip $(PORT_DIR)/*
+
+prepare_port:
+	rm -rf $(PORT_DIR)
+	mkdir -p $(PORT_DIR)
+	cp -r $(SRC_DIR)/* $(PORT_DIR)
+
+generate_prj:
+	rm -rf $(PORT_DIR)/$(PROJECT_NAME).prj
+	find $(PORT_DIR)/*.c > $(PORT_DIR)/$(PROJECT_NAME).prj
+	sed -i -e 's/$(PORT_DIR)\///' $(PORT_DIR)/$(PROJECT_NAME).prj
+
+port: prepare_port generate_prj
+	find $(PORT_DIR) -name '*.[ch]' | xargs sed -i -e 's/inline //'
+	find $(PORT_DIR) -name '*.*' | xargs sed -i -e 's/\r\+$$/\r/'
+
 clean:
 	rm -rf $(TARGET_DIR)
 
-.PHONY: all prepare build clean
+.PHONY: all prepare build clean pack prepare_port generate_prj port
