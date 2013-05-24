@@ -3,6 +3,8 @@ PROJECT_NAME = aqulia
 CMAKE = `which cmake`
 TARGET_DIR = build
 SOURCE_DIR = $(CURDIR)
+SRC_DIR = src
+PORT_DIR = port
 
 ifeq ($(DEBUG), 1)
 	CMAKE_VARS := -DCMAKE_BUILD_TYPE=Debug
@@ -18,7 +20,7 @@ build: prepare
 	cd $(TARGET_DIR); $(MAKE); $(MAKE) install
 
 pack:
-	zip $(PROJECT_NAME).zip $(PORT_DIR)/*
+	zip $(PORT_DIR).zip $(PORT_DIR)/*
 
 prepare_port:
 	rm -rf $(PORT_DIR)
