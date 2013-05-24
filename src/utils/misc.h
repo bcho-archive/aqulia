@@ -6,4 +6,7 @@
 /* Touch a file. */
 void touch_file(char *fname);
 
+/* Validate date format */
+int date_validate(char *str);
+
 #endif

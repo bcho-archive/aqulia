@@ -24,6 +24,8 @@ typedef enum {
 } E_ACCOUNT_CONSUME_TYPE;
 
 /* default file name */
+#define DATA_PREFIX "data/"
+#define ACCOUNT_LIST "accounts.dat"
 #define FPERSONAL "personal.dat"
 #define FFREEZE "freeze.dat"
 #define FCONSUME_RECORD "fee.dat"
@@ -65,6 +67,7 @@ E_ACCOUNT_CONSUME_TYPE
 account_consume_delete(struct account *account, struct consume_record *record);
 
 /* validate */
+int account_exists(int cardno);
 E_ACCOUNT_ACCESS_TYPE account_validate(struct account *account);
 
 /* query */

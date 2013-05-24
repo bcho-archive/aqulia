@@ -101,13 +101,13 @@ account_read(int cardno, struct account **account_return)
     if ((account = malloc(sizeof(struct account))) == NULL)
         ERROR("malloc");
     /* TODO portable path building */
-    sprintf(base, "%d/"FPERSONAL, cardno);
+    sprintf(base, DATA_PREFIX"%d/"FPERSONAL, cardno);
     account->fpersonal = strdup(base);
-    sprintf(base, "%d/"FFREEZE, cardno);
+    sprintf(base, DATA_PREFIX"%d/"FFREEZE, cardno);
     account->ffreeze = strdup(base);
-    sprintf(base, "%d/"FCONSUME_RECORD, cardno);
+    sprintf(base, DATA_PREFIX"%d/"FCONSUME_RECORD, cardno);
     account->fconsume_record = strdup(base);
-    sprintf(base, "%d/"FCONSUME_UNDO, cardno);
+    sprintf(base, DATA_PREFIX"%d/"FCONSUME_UNDO, cardno);
     account->fconsume_undo = strdup(base);
 
     /* read personal infomation */
@@ -151,4 +151,29 @@ account_destory(struct account *account)
         free(account->faculty);
         consume_record_destory(account->record);
     }
+}
+
+static int
+account_list(int **cardno)
+{
+    int count, no;
+    int *accounts;
+    char line[19];
+    FILE *stream;
+
+    if ((stream = fopen(DATA_PREFIX ACCOUNT_LIST, "r")) == NULL)
+        ERROR("open account list: %s", ACCOUNT_LIST);
+
+    count = 0; accounts = NULL;
+    while (fgets(line, 19, stream) != NULL) {
+        no = atoi(line);
+
+        if (no) {
+            count++;
+            accounts = realloc(accounts, sizeof(int) * count);
+            accounts[count - 1] = no;
+        }
+    }
+    *cardno = accounts;
+    return count;
 }
