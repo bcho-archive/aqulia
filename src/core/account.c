@@ -31,11 +31,11 @@ prepare_header(struct csv_header *header)
 inline static void
 prepare_row(struct csv_row *row, struct account *account)
 {
-    csv_find_row(row, "cardno")->ivalue = account->cardno;
-    csv_find_row(row, "expire")->svalue = strdup(account->expire);
-    csv_find_row(row, "balance")->dvalue = account->balance;
-    csv_find_row(row, "state")->ivalue = account->state;
-    csv_find_row(row, "faculty")->svalue = strdup(account->faculty);
+    csv_find_row(row, "cardno")->value.i = account->cardno;
+    csv_find_row(row, "expire")->value.s = strdup(account->expire);
+    csv_find_row(row, "balance")->value.d = account->balance;
+    csv_find_row(row, "state")->value.i = account->state;
+    csv_find_row(row, "faculty")->value.s = strdup(account->faculty);
 }
 
 inline static void
@@ -58,11 +58,11 @@ personal_read(char *fname, struct account *account)
     if (row == NULL)
         return;
 
-    account->cardno = csv_find_row(row, "cardno")->ivalue;
-    account->expire = strdup(csv_find_row(row, "expire")->svalue);
-    account->balance = csv_find_row(row, "balance")->dvalue;
-    account->state = csv_find_row(row, "state")->ivalue;
-    account->faculty = strdup(csv_find_row(row, "faculty")->svalue);
+    account->cardno = csv_find_row(row, "cardno")->value.i;
+    account->expire = strdup(csv_find_row(row, "expire")->value.s);
+    account->balance = csv_find_row(row, "balance")->value.d;
+    account->state = csv_find_row(row, "state")->value.i;
+    account->faculty = strdup(csv_find_row(row, "faculty")->value.s);
 
     csv_destory_row(row);
     csv_destory_header(header);

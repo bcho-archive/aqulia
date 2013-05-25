@@ -23,11 +23,11 @@ struct csv_row {
     field_type_t type;
     char fmt[10];
     union {
-        int ivalue;
-        long lvalue;
-        double dvalue;
-        char *svalue;
-    };
+        int i;
+        long l;
+        double d;
+        char *s;
+    } value;
 
     struct csv_row *next;
 };

@@ -67,13 +67,13 @@ prepare_header(struct csv_header *header)
 inline static void
 prepare_row(struct csv_row *row, struct consume_record *record)
 {
-    csv_find_row(row, "consumed")->svalue = strdup(record->consumed);
-    csv_find_row(row, "received")->svalue = strdup(record->consumed);
-    csv_find_row(row, "sum")->dvalue = record->sum;
-    csv_find_row(row, "balance")->dvalue = record->balance;
-    csv_find_row(row, "consume_type")->ivalue = record->type;
-    csv_find_row(row, "transcation")->ivalue = record->pos->transcation;
-    csv_find_row(row, "pos")->svalue = strdup(record->pos->name);
+    csv_find_row(row, "consumed")->value.s = strdup(record->consumed);
+    csv_find_row(row, "received")->value.s = strdup(record->consumed);
+    csv_find_row(row, "sum")->value.d = record->sum;
+    csv_find_row(row, "balance")->value.d = record->balance;
+    csv_find_row(row, "consume_type")->value.i = record->type;
+    csv_find_row(row, "transcation")->value.i = record->pos->transcation;
+    csv_find_row(row, "pos")->value.s = strdup(record->pos->name);
 }
 
 struct consume_record *
@@ -99,15 +99,15 @@ consume_record_read(char *fname)
             ERROR("malloc");
 
         p->next = NULL;
-        p->consumed = strdup(csv_find_row(row, "consumed")->svalue);
-        p->received = strdup(csv_find_row(row, "received")->svalue);
-        p->sum = csv_find_row(row, "sum")->dvalue;
-        p->balance = csv_find_row(row, "balance")->dvalue;
-        p->type = csv_find_row(row, "consume_type")->ivalue;
+        p->consumed = strdup(csv_find_row(row, "consumed")->value.s);
+        p->received = strdup(csv_find_row(row, "received")->value.s);
+        p->sum = csv_find_row(row, "sum")->value.d;
+        p->balance = csv_find_row(row, "balance")->value.d;
+        p->type = csv_find_row(row, "consume_type")->value.i;
         if ((p->pos = malloc(sizeof(struct POS))) == NULL)
             ERROR("malloc");
-        p->pos->name = strdup(csv_find_row(row, "pos")->svalue);
-        p->pos->transcation = csv_find_row(row, "transcation")->ivalue;
+        p->pos->name = strdup(csv_find_row(row, "pos")->value.s);
+        p->pos->transcation = csv_find_row(row, "transcation")->value.i;
 
         /* create link list */
         if (head == NULL)

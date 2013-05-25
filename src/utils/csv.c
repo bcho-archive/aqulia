@@ -83,18 +83,18 @@ csv_read_row(FILE *stream, struct csv_header *header)
 
             switch (h->type) {
                 case CSV_INT:
-                    p->ivalue = atoi(value);
+                    p->value.i = atoi(value);
                     break;
                 case CSV_LONG:
-                    p->lvalue = atol(value);
+                    p->value.l = atol(value);
                     break;
                 case CSV_DOUBLE:
-                    p->dvalue = atof(value);
+                    p->value.d = atof(value);
                     break;
                 case CSV_STRING:
                 default:
-                    p->svalue = strdup(value);
-                    if (p->svalue == NULL)
+                    p->value.s = strdup(value);
+                    if (p->value.s == NULL)
                         ERROR("malloc");
                     break;
             }
@@ -146,17 +146,17 @@ _write_field(FILE *stream, struct csv_row *row)
 {
    switch (row->type) {
         case CSV_INT:
-            fprintf(stream, row->fmt, row->ivalue);
+            fprintf(stream, row->fmt, row->value.i);
             break;
         case CSV_LONG:
-            fprintf(stream, row->fmt, row->lvalue);
+            fprintf(stream, row->fmt, row->value.l);
             break;
         case CSV_DOUBLE:
-            fprintf(stream, row->fmt, row->dvalue);
+            fprintf(stream, row->fmt, row->value.d);
             break;
         case CSV_STRING:
         default:
-            fprintf(stream, row->fmt, row->svalue);
+            fprintf(stream, row->fmt, row->value.s);
             break;
    }
 }
@@ -216,7 +216,7 @@ csv_destory_row(struct csv_row *row)
     while (row != NULL) {
         p = row->next;
         if (row->type == CSV_STRING)
-            free(row->svalue);
+            free(row->value.s);
         free(row);
         row = p;
     }
