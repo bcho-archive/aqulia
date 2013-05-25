@@ -3,12 +3,17 @@
 #include "cli/screen.h"
 #include "cli/unit.h"
 #include "utils/misc.h"
+#include "utils/debug.h"
 #include "vendor/conio.h"
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define LINE_MAX 1024
+#define RECORD_MAX 100
+#define RECORD_DISPLAY_MAX 10
+#define APP_NAME "GDUT_POS"
 
 /* account */
 // oh yes, global is evil, but don't panic :)
@@ -22,12 +27,18 @@ char CHOICES[] = "Your choices: ";
 /* basic routine */
 void display(struct unit_buf *buf);
 void app_exit(int errno);
+/* display consume record with j/k scrolling and detail viewing */
+int display_consume_record(struct consume_record *b, struct consume_record *e);
+/* convert consume records to string */
+int record_str(char *buf[], struct consume_record **d, struct consume_record *e);
 
 /* screen */
 
 /* parent */
 void login_menu();
 void main_menu();
+void unfreeze_page();
+void relogin_page();
 
 /* first level children */
 void query_menu();
@@ -37,6 +48,18 @@ void remove_page();
 void freeze_page();
 void pos_page();
 void help_page();
+
+/* second level children */
+void query_by_date();
+void query_by_date_range();
+void query_by_sum();
+
+void sort_by_date(int reverse);
+void sort_by_sum(int reverse);
+void sort_by_transcation(int reverse);
+
+/* third level children */
+void delete_record(struct consume_record *record);
 
 int main()
 {
@@ -89,7 +112,7 @@ void login_menu()
         state = account_read(cardno, &potato);
 
         if (state == E_FREEZE)
-            cprintf("goto unfreeze page");
+            unfreeze_page();
         else if (state == E_OK)
             main_menu();
         app_exit(0);                                        /* ensure our app will terminate here */
@@ -130,16 +153,16 @@ void main_menu()
                 stat_page();
                 break;
             case '4':
-                cprintf("goto remove record");
+                remove_page();
                 break;
             case '5':
-                cprintf("goto freeze record");
+                freeze_page();
                 break;
             case '6':
-                cprintf("goto pos");
+                pos_page();
                 break;
             case '7':
-                cprintf("goto help");
+                help_page();
                 break;
             case 'x' :
                 app_exit(0);
@@ -148,6 +171,55 @@ void main_menu()
                 break;
         }
     }
+}
+
+void unfreeze_page()
+{
+    int loop;
+    char msg[LINE_MAX], op;
+    struct unit_buf *unit;
+
+    E_ACCOUNT_ACCESS_TYPE state;
+
+    sprintf(msg, "Your account (%d) had been frozen, "
+                 "do you want to unfreeze it?(y or n) ", potato->cardno);
+    unit = unit_hero(msg);
+
+    if ((state = account_validate(potato)) == E_OK)
+        return;
+
+    loop = 1;
+    while (loop) {
+        display(unit);
+
+        op = getche();
+
+        switch (op) {
+            case 'y':
+            case 'Y':
+                state = account_unfreeze(potato);
+                if (state == E_OK)
+                    relogin_page();
+            case 'n':
+            case 'N':
+                login_menu();
+            case 'q':
+                return;
+            case 'x':
+                app_exit(0);
+                break;
+        }
+    }
+}
+
+void relogin_page()
+{
+    struct unit_buf *unit;
+
+    unit = unit_hero("Now please login again. ");
+    display(unit);
+    getch();
+    login_menu();
 }
 
 void query_menu()
@@ -170,13 +242,13 @@ void query_menu()
         op = getche();
         switch (op) {
             case '1':
-                cprintf("goto query by date");
+                query_by_date();
                 break;
             case '2':
-                cprintf("goto query by date range");
+                query_by_date_range();
                 break;
             case '3':
-                cprintf("goto query by sum");
+                query_by_sum();
                 break;
             case 'x':
                 app_exit(0);
@@ -211,11 +283,22 @@ void sort_menu()
 
         switch (op) {
             case '1':
+                sort_by_date(0);
+                break;
             case '2':
+                sort_by_date(1);
+                break;
             case '3':
+                sort_by_sum(0);
+                break;
             case '4':
+                sort_by_sum(1);
+                break;
             case '5':
+                sort_by_transcation(0);
+                break;
             case '6':
+                sort_by_transcation(1);
                 break;
             case 'x':
                 app_exit(0);
@@ -229,9 +312,12 @@ void sort_menu()
 void stat_page()
 {
     int loop, bf, ef;
-    char op, b[LINE_MAX], e[LINE_MAX], *cur;
+    char b[LINE_MAX], e[LINE_MAX], buf[LINE_MAX], *cur;
     struct unit_buf *unit;
     char *msg;
+    double sum;
+    E_ACCOUNT_ACCESS_TYPE state;
+    struct consume_record *be, *ee;
 
     msg = "Which date you want to start with? (e.g. 20130230) ";
     loop = 1;
@@ -254,6 +340,7 @@ void stat_page()
                 app_exit(0);
 
             if (!date_validate(b)) {
+                bf = 0;
                 msg = "Oops, your input format is incorrect, "
                       "please make sure your input looks like 20130230: ";
                 continue;
@@ -264,6 +351,7 @@ void stat_page()
                     continue;
             }
             if (!date_validate(e)) {
+                ef = 0;
                 msg = "Oops, it seems that your input format is incorrect, "
                       "make sure your input looks like 20130230";
                 continue;
@@ -275,7 +363,15 @@ void stat_page()
                 ef = 1;
             }
         } else {
-            cprintf("display sum");
+            if ((state == account_query_by_date_range(potato, b, e, &be, &ee)) != E_OK)
+                unfreeze_page();
+            for (sum = 0;be != NULL && be != ee;be = be->next)
+                if (be->type == CONSUME_POS)
+                    sum += be->sum;
+            sprintf(buf, "From %s to %s, you had consumed %.2lf.", b, e, sum);
+            unit = unit_normal("Statistics", buf);
+            display(unit);
+            getch();
             break;
         }
     }
@@ -283,11 +379,97 @@ void stat_page()
 
 void remove_page()
 {
+    int loop, length, select;
+    char op, *msg, *options[RECORD_MAX];
+    struct unit_buf *unit;
+    E_ACCOUNT_ACCESS_TYPE state;
+    struct consume_record *record, *b, *e;
+
+    if ((state = account_sort_by_date(potato, 0)) != E_OK)
+        unfreeze_page();
+
+    b = potato->record; e = NULL;
+    length = record_str(options, &b, e);
+    unit = unit_center_menu(options, length);
+    unit = unit_select_menu(unit, CHOICES);
+    loop = 1;
+    while (loop) {
+        record = potato->record;
+        display(unit);
+
+        op = getche();
+
+        switch (op) {
+            case 'q':
+                return;
+            case 'x':
+                app_exit(0);
+                break;
+            case 'j':
+                length = record_str(options, &b, e);
+                if (length)
+                    unit = unit_center_menu(options, length);
+                break;
+            /* TODO j back */
+            case 'k':
+                length = record_str(options, &b, e);
+                if (length)
+                    unit = unit_center_menu(options, length);
+                break;
+            default:
+                if (isalnum(op)) {
+                    select = op - '0';
+                    while (select-- > 1 && record != NULL)
+                        record = record->next;
+                    if (record != NULL) {
+                        delete_record(record);
+                        if ((state = account_sort_by_date(potato, 0)) != E_OK)
+                            unfreeze_page();
+                        b = potato->record;
+                        length = record_str(options, &b, e);
+                        unit = unit_center_menu(options, length);
+                        unit = unit_select_menu(unit, CHOICES);
+                    }
+                }
+        }
+    }
 }
 
 void freeze_page()
 {
+    int loop;
+    char op;
+    struct unit_buf *unit;
 
+    E_ACCOUNT_ACCESS_TYPE state;
+
+    if ((state = account_validate(potato)) != E_OK)
+        unfreeze_page();
+
+    loop = 1;
+    while (loop) {
+        unit = unit_hero("This will freeze your card, are you sure?(y or n) ");
+        display(unit);
+
+        op = getche();
+
+        switch (op) {
+            case 'y':
+            case 'Y':
+                state = account_freeze(potato);
+                if (state == E_FREEZE)
+                    unfreeze_page();
+                break;
+
+            case 'n':
+            case 'N':
+            case 'q':
+                return;
+            case 'x':
+                app_exit(0);
+                break;
+        }
+    }
 }
 
 void pos_page()
@@ -296,13 +478,306 @@ void pos_page()
 
 void help_page()
 {
+    int loop;
+    char op;
+    struct unit_buf *unit;
+
+    loop = 1;
+    while (loop) {
+        unit = unit_normal("GDUT POS", "Just do what I told you dude!");
+        display(unit);
+
+        op =  getche();
+
+        switch (op) {
+            case 'x':
+                app_exit(0);
+                break;
+            case 'q':
+                return;
+        }
+    }
 }
 
 void app_exit(int errno)
 {
+    account_save(potato);
     clrscr();
     gotoxy(WIN_WIDTH / 2, WIN_HEIGHT / 2);
     cprintf("Bye!\n");
 
     exit(errno);
+}
+
+void query_by_date()
+{
+    int loop;
+    char date[LINE_MAX];
+    struct unit_buf *unit;
+    char *msg;
+
+    E_ACCOUNT_ACCESS_TYPE state;
+    struct consume_record *b, *e;
+
+    msg = "Which date you want to check? (e.g. 20130230) ";
+    loop = 1;
+
+    while (loop) {
+        unit = unit_normal("Query by date", msg);
+        display(unit);
+
+        cscanf("%s", date);
+        if (strcmp(date, "q") == 0)
+            return;
+        if (strcmp(date, "x") == 0)
+            app_exit(0);
+
+        if (!date_validate(date)) {
+                msg = "Oops, your input format is incorrect, "
+                      "please make sure your input looks like 20130230: ";
+                continue;
+        } else {
+            state = account_query_by_date(potato, date, &b, &e);
+            if (state == E_OK) {
+                display_consume_record(b, e);
+                break;
+            } else {
+                unfreeze_page();
+                break;
+            }
+        }
+    }
+}
+
+void query_by_date_range()
+{
+    int loop, bf, ef;
+    char bd[LINE_MAX], ed[LINE_MAX], *cur;
+    struct unit_buf *unit;
+    char *msg;
+
+    E_ACCOUNT_ACCESS_TYPE state;
+    struct consume_record *b, *e;
+
+    msg = "Which date you want to start with? (e.g. 20130230) ";
+    loop = 1;
+    bf = 0; ef = 0;
+
+    while (loop) {
+        unit = unit_normal("Query by date range", msg);
+        display(unit);
+
+        if (!bf || !ef) {
+            cur = (bf) ? ed : bd;
+
+            cscanf("%s", cur);
+            if (strcmp(cur, "q") == 0)
+                return;
+            if (strcmp(cur, "x") == 0)
+                app_exit(0);
+
+            if (!date_validate(bd)) {
+                bf = 0;
+                msg = "Oops, your input format is incorrect, "
+                      "please make sure your input looks like 20130230: ";
+                continue;
+            } else {
+                bf = 1;
+                msg = "Now tell me the end date: ";
+                if (!date_validate(ed))
+                    continue;
+            }
+            if (!date_validate(ed)) {
+                ef = 0;
+                msg = "Oops, it seems that your input format is incorrect, "
+                      "make sure your input looks like 20130230";
+                continue;
+            } else {
+                if (strcmp(ed, bd) < 0) {
+                    msg = "Oops, the end date is before the start date, try again: ";
+                    continue;
+                }
+                ef = 1;
+            }
+        } else {
+            state = account_query_by_date_range(potato, bd, ed, &b, &e);
+            if (state == E_OK) {
+                display_consume_record(b, e);
+                break;
+            } else {
+                unfreeze_page();
+            }
+        }
+    }
+}
+
+void query_by_sum()
+{
+    int loop;
+    double sum;
+    char _sum[LINE_MAX];
+    struct unit_buf *unit;
+    char *msg;
+
+    E_ACCOUNT_ACCESS_TYPE state;
+    struct consume_record *b, *e;
+
+    msg = "Tell me the borderline sum: ";
+    loop = 1;
+
+    while (loop) {
+        unit = unit_normal("Query by sum", msg);
+        display(unit);
+
+        cscanf("%s", _sum);
+        if (strcmp(_sum, "q") == 0)
+            return;
+        if (strcmp(_sum, "x") == 0)
+            app_exit(0);
+        sum = atof(_sum);
+        if (sum <= 0) {
+            msg = "Oops, your input seems wrong, try again? ";
+            continue;
+        }
+
+        state = account_query_by_sum(potato, sum, &b, &e);
+        if (state == E_OK) {
+            display_consume_record(b, e);
+            break;
+        } else {
+            unfreeze_page();
+            break;
+        }
+    }
+}
+
+void sort_by_date(int reverse)
+{
+    E_ACCOUNT_ACCESS_TYPE state;
+
+    if ((state = account_sort_by_date(potato, reverse)) != E_OK)
+        unfreeze_page();
+
+    display_consume_record(potato->record, NULL);
+}
+
+void sort_by_sum(int reverse)
+{
+    E_ACCOUNT_ACCESS_TYPE state;
+
+    if ((state = account_sort_by_sum(potato, reverse)) != E_OK)
+        unfreeze_page();
+
+    display_consume_record(potato->record, NULL);
+}
+
+void sort_by_transcation(int reverse)
+{
+    E_ACCOUNT_ACCESS_TYPE state;
+
+    if ((state = account_sort_by_transcation(potato, reverse)) != E_OK)
+        unfreeze_page();
+
+    display_consume_record(potato->record, NULL);
+}
+
+int record_str(char *buf[], struct consume_record **d, struct consume_record *e)
+{
+    char str[LINE_MAX], *type;
+    int c;
+    struct consume_record *b;
+
+    for (b = *d,c = 0;
+         b != NULL && b != e && c < RECORD_DISPLAY_MAX;
+         b = b->next, c++) {
+        if (b->type == CONSUME_POS)
+            type = "pos";
+        else if (b->type == CONSUME_RECHARGE)
+            type = "recharge";
+        sprintf(str, "%d. %s sum: %.2lf balance: %.2lf in %s(%d, %s)",
+                c + 1, b->consumed, b->sum, b->balance,
+                b->pos->name, b->pos->transcation, type);
+        buf[c] = strdup(str);
+    }
+    *d = b;
+
+    return c;
+}
+
+int display_consume_record(struct consume_record *b, struct consume_record *e)
+{
+    int loop, length;
+    char op;
+    char *options[RECORD_MAX];
+    struct unit_buf *menu;
+
+    length = record_str(options, &b, e);
+    menu = unit_center_menu(options, length);
+
+    loop = 1;
+    while (loop) {
+        display(menu);
+
+        op = getche();
+
+        switch (op) {
+            case 'q':
+                return 0;
+            case 'x':
+                app_exit(0);
+                break;
+            case 'j':
+                length = record_str(options, &b, e);
+                if (length)
+                    menu = unit_center_menu(options, length);
+                break;
+            /* TODO j back */
+            case 'k':
+                length = record_str(options, &b, e);
+                if (length)
+                    menu = unit_center_menu(options, length);
+                break;
+            default:
+                if (isalnum(op))
+                    return op - '0';
+        }
+    }
+    return 0;
+}
+
+void delete_record(struct consume_record *record)
+{
+    char op, msg[LINE_MAX];
+    struct unit_buf *unit;
+    E_ACCOUNT_CONSUME_TYPE state;
+
+    if (record == NULL)
+        return;
+    sprintf(msg, "Are you sure to remove record %s (%s)?(y or n) ",
+            record->consumed, record->pos->name);
+    unit = unit_hero(msg);
+    display(unit);
+    op = getche();
+
+    switch (op) {
+        case 'y':
+        case 'Y':
+            if ((state = account_consume_delete(potato, record)) != E_CONSUME_OK) {
+                unit = unit_hero("Error! Please (don't) contact admin!");
+                display(unit);
+                getch();
+                app_exit(1);
+            } else {
+                unit = unit_hero("Removed!");
+                display(unit);
+                getch();
+            }
+            return;
+        case 'n':
+        case 'N':
+        case 'q':
+            return;
+        case 'x':
+            app_exit(0);
+    }
 }
