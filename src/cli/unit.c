@@ -20,9 +20,10 @@ create_block(char *src, int line_width, int leftpadding, int *line)
     if (msg_width == 0)
         return NULL;
     *line = msg_width / line_width + 1;
-    total = msg_width * *line + leftpadding * (*line - 1);
+    total = msg_width * *line + leftpadding * (*line - 1) + 1;
     if ((block = malloc(sizeof(char) * total)) == NULL)
         ERROR("malloc");
+    memset(block, 0, total);
     for (p = block, s = src, i = *line;i > 1;i--) {
         strncpy(p, s, line_width);
         *(p + line_width) = '\n';
@@ -138,7 +139,7 @@ unit_destory(struct unit_buf *unit)
 struct unit_buf *
 unit_center_menu(char *list[], int length)
 {
-    return menu(list, length, INNER_HEIGHT - PADDING * 2,
+    return menu(list, length, INNER_WIDTH - PADDING * 2,
                 BORDER_WIDTH + PADDING + NORMAL_UNIT_PADDING,
                 BORDER_WIDTH + PADDING + NORMAL_UNIT_PADDING);
 }

@@ -3,7 +3,7 @@
 #define SCREEN_H
 
 #define WIN_WIDTH 80
-#define WIN_HEIGHT 40
+#define WIN_HEIGHT 35
 #define PADDING 1
 #define INNER_WIDTH (WIN_WIDTH - BORDER_WIDTH * 2)
 #define INNER_HEIGHT (WIN_HEIGHT - BORDER_WIDTH * 2)
