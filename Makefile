@@ -19,7 +19,7 @@ prepare:
 build: prepare
 	cd $(TARGET_DIR); $(MAKE); $(MAKE) install
 
-pack:
+pack: port
 	zip $(PORT_DIR).zip $(PORT_DIR)/*
 
 prepare_port:
