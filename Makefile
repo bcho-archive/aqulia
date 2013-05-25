@@ -35,7 +35,7 @@ generate_prj:
 
 port: prepare_port generate_prj
 	find $(PORT_DIR) -name '*.[ch]' | xargs sed -i -e 's/inline //'
-	find $(PORT_DIR) -name '*.*' | xargs sed -i -e 's/\r\+$$/\r/'
+	find $(PORT_DIR) -name '*.*' | xargs sed -i -e 's/\r*$$/\r/'
 
 clean:
 	rm -rf $(TARGET_DIR)
