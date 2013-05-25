@@ -10,7 +10,7 @@ account_query_by_date(struct account *account, char *date,
     E_ACCOUNT_ACCESS_TYPE state;
     struct consume_record *b, *e;
 
-    if ((state = account_sort_by_date(account, 0)) != E_OK)
+    if ((state = account_sort_by_date(account, 1)) != E_OK)
         return state;
 
     for (b = account->record;
@@ -36,7 +36,7 @@ account_query_by_date_range(struct account *account,
     E_ACCOUNT_ACCESS_TYPE state;
     struct consume_record *b, *e;
 
-    if ((state = account_sort_by_date(account, 0)) != E_OK)
+    if ((state = account_sort_by_date(account, 1)) != E_OK)
         return state;
 
     for (b = account->record;
@@ -61,7 +61,7 @@ account_query_by_sum(struct account *account, double sum,
     E_ACCOUNT_ACCESS_TYPE state;
     struct consume_record *b, *e;
 
-    if ((state = account_sort_by_date(account, 0)) != E_OK)
+    if ((state = account_sort_by_sum(account, 0)) != E_OK)
         return state;
 
     for (b = account->record;
