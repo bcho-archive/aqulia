@@ -41,6 +41,7 @@ void unfreeze_page();
 void relogin_page();
 
 /* first level children */
+void personal_page();
 void query_menu();
 void sort_menu();
 void stat_page();
@@ -124,6 +125,7 @@ void main_menu()
     int loop;
     char op;
     char *options[] = {
+        "0. Personal infomation",
         "1. Query",
         "2. Sort",
         "3. Statistics",
@@ -143,6 +145,9 @@ void main_menu()
         op = getche();
 
         switch (op) {
+            case '0':
+                personal_page();
+                break;
             case '1':
                 query_menu();
                 break;
@@ -220,6 +225,21 @@ void relogin_page()
     display(unit);
     getch();
     login_menu();
+}
+
+void personal_page()
+{
+    int loop;
+    char buf[LINE_MAX];
+    struct unit_buf *unit;
+
+    sprintf(buf, "Hi %d from %s, your remain balance is %.2lf. "
+                 "And your card will expire in %s",
+                 potato->cardno, potato->faculty, potato->balance,
+                 potato->expire);
+    unit = unit_hero(buf);
+    display(unit);
+    getch();
 }
 
 void query_menu()
@@ -363,7 +383,7 @@ void stat_page()
                 ef = 1;
             }
         } else {
-            if ((state == account_query_by_date_range(potato, b, e, &be, &ee)) != E_OK)
+            if ((state = account_query_by_date_range(potato, b, e, &be, &ee)) != E_OK)
                 unfreeze_page();
             for (sum = 0;be != NULL && be != ee;be = be->next)
                 if (be->type == CONSUME_POS)
@@ -380,7 +400,7 @@ void stat_page()
 void remove_page()
 {
     int loop, length, select;
-    char op, *msg, *options[RECORD_MAX];
+    char op, *options[RECORD_MAX];
     struct unit_buf *unit;
     E_ACCOUNT_ACCESS_TYPE state;
     struct consume_record *record, *b, *e;
@@ -474,6 +494,85 @@ void freeze_page()
 
 void pos_page()
 {
+    int loop, _type;
+    unsigned int flag;
+    struct unit_buf *unit;
+    char buf[LINE_MAX];
+    char *consumed, *pos, *msg;
+    double sum;
+    CONSUME_TYPE_T consume_type;
+    E_ACCOUNT_CONSUME_TYPE state;
+
+    loop = 1; flag = 8;
+    msg = "Please input consumed date. (e.g. 20130230) ";
+    pos = APP_NAME;
+
+    while (loop) {
+        if (flag == (1 | 2 | 4 | 8)) {
+            state = account_consume(potato, consumed, consumed, sum, consume_type, pos);
+            if (state == E_CONSUME_OK) {
+                unit = unit_hero("OK!");
+                display(unit);
+                getch();
+                return;
+            } else {
+                unit = unit_hero("Failed! Please (don't) contact admin.");
+                display(unit);
+                getch();
+                flag = 0;
+            }
+        } else {
+            unit = unit_normal("Create record", msg);
+            display(unit);
+            cscanf("%s", buf);
+
+            if (strcmp(buf, "q") == 0)
+                return;
+            if (strcmp(buf, "x") == 0)
+                app_exit(0);
+
+            if ((flag & 1) == 0) {
+                if (date_validate(buf)) {
+                    consumed = strdup(buf);
+                    flag |= 1;
+                    msg = "Now tell me the sum: ";
+                    continue;
+                } else {
+                    msg = "Oops... It seems that your date format is wrong! ";
+                    continue;
+                }
+            }
+            if ((flag & 2) == 0) {
+                sum = atof(buf);
+                if (sum < 0) {
+                    msg = "Oops... The sum cannot be negative! ";
+                    continue;
+                } else {
+                    flag |= 2;
+                    msg = "... and type?(0 for pos or 1 for recharge) ";
+                    continue;
+                }
+            }
+            if ((flag & 4) == 0) {
+                if (!(strlen(buf) == 1 && isalnum(buf[0]))) {
+                    msg = "Oops... Please choose between 0 and 1 ";
+                    continue;
+                } else {
+                    _type = atoi(buf);
+                    if (_type == (int) CONSUME_POS) {
+                        consume_type = CONSUME_POS;
+                    } else if (_type == (int) CONSUME_RECHARGE) {
+                        consume_type = CONSUME_RECHARGE;
+                    } else {
+                        msg = "Oops... Please choose between 0 and 1 ";
+                        continue;
+                    }
+                    flag |= 4;
+                    continue;
+                }
+            }
+        }
+    }
 }
 
 void help_page()
