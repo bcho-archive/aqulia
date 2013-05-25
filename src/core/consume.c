@@ -12,9 +12,14 @@ account_consume(struct account *account,
 
     if (account_validate(account) == E_FREEZE)
         return E_CONSUME_FREEZED;
-    balance = account->balance - sum;
-    if (balance < 0 || account->balance <= 0)
-        return E_CONSUME_CANTPAY;
+
+    if (consume_type == CONSUME_POS) {
+        balance = account->balance - sum;
+        if (balance < 0 || account->balance <= 0)
+            return E_CONSUME_CANTPAY;
+    } else if (consume_type == CONSUME_RECHARGE) {
+        balance = account->balance + sum;
+    }
 
     account->balance = balance;
     new = consume_record_create(consumed, received, sum, balance,
