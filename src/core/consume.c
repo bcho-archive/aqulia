@@ -39,9 +39,13 @@ account_consume_delete(struct account *account, struct consume_record *record)
          prev = prev->next)
         ;
 
-    if (prev == NULL || prev->next == NULL)
+    if (prev == NULL || prev->next == NULL && record != account->record)
         return E_CONSUME_NOTFOUND;
-    prev->next = record->next;
+
+    if (record != account->record)
+        prev->next = record->next;
+    else
+        account->record = record->next;
     account_save(account);
 
     undo = consume_record_read(account->fconsume_undo);
