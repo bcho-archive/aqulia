@@ -26,6 +26,7 @@ prepare_port:
 	rm -rf $(PORT_DIR)
 	mkdir -p $(PORT_DIR)
 	cp -r $(SRC_DIR)/* $(PORT_DIR)
+	-cp `find $(PORT_DIR) -name '*.[ch]'` $(PORT_DIR)/
 
 generate_prj:
 	rm -rf $(PORT_DIR)/$(PROJECT_NAME).prj
