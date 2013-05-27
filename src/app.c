@@ -805,11 +805,14 @@ int record_str(char *buf[], struct consume_record **d, struct consume_record *e)
 
 int display_consume_record(struct consume_record *b, struct consume_record *e)
 {
-    int loop, length;
+    int loop, length, pc;
     char op;
     char *options[RECORD_MAX];
     struct unit_buf *menu;
+    struct consume_record *prev[RECORD_MAX];
 
+    pc = 0;
+    prev[pc] = b;
     length = record_str(options, &b, e);
     menu = unit_center_menu(options, length);
 
@@ -826,15 +829,21 @@ int display_consume_record(struct consume_record *b, struct consume_record *e)
                 app_exit(0);
                 break;
             case 'j':
+                pc++;
+                prev[pc] = b;
                 length = record_str(options, &b, e);
                 if (length)
                     menu = unit_center_menu(options, length);
+                else
+                    pc--;
                 break;
-            /* TODO j back */
             case 'k':
-                length = record_str(options, &b, e);
-                if (length)
-                    menu = unit_center_menu(options, length);
+                if (pc > 0) {
+                    b = prev[--pc];
+                    length = record_str(options, &b, e);
+                    if (length)
+                        menu = unit_center_menu(options, length);
+                }
                 break;
             default:
                 if (isalnum(op))
